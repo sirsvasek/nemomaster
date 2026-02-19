@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RentMaster</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cr-frame:#18181f;--cr-tabbar:#22222c;--cr-tab-bg:#2a2a36;
+  --cr-tab-active:#16161e;--cr-tab-hover:#32323f;
+  --cr-tab-txt:#e8e8f0;--cr-tab-muted:#8888a8;
+  --cr-toolbar:#16161e;--cr-border:#2e2e3e;
+  --cr-url-bg:#22222c;--cr-url-txt:#b0b0cc;
+  --bg:#0f0f16;--surface:#16161e;--card:#1e1e28;--card2:#22222c;
+  --border:#2a2a3a;--border2:#333348;
+  --gold:#c9a84c;--gold2:#e8c96b;--gold-dim:rgba(201,168,76,.12);
+  --text:#e8e8f0;--text2:#a0a0c0;--muted:#606080;
+  --danger:#e05c5c;--success:#4cc9a4;--warn:#e09a3c;--blue:#6b8cde;--purple:#a45ce0;
+  --gold-inv:#0a0a10;
+}
+:root.light{
+  --cr-frame:#dde0e8;--cr-tabbar:#e4e8f0;--cr-tab-bg:#d4d8e4;
+  --cr-tab-active:#f5f5ff;--cr-tab-hover:#dcdee8;
+  --cr-tab-txt:#1a1a2e;--cr-tab-muted:#606080;
+  --cr-toolbar:#f5f5ff;--cr-border:#c4c8d4;
+  --cr-url-bg:#eeeef8;--cr-url-txt:#2a2a40;
+  --bg:#f0f0f8;--surface:#f8f8ff;--card:#ffffff;--card2:#f0f0f8;
+  --border:#dcdce8;--border2:#c8c8d8;
+  --gold:#a07828;--gold2:#c9a84c;--gold-dim:rgba(160,120,40,.1);
+  --text:#1a1a2e;--text2:#50507a;--muted:#9090b0;
+  --danger:#c0392b;--success:#1a8870;--warn:#b86a10;--blue:#3a5cc0;--purple:#7c2ec0;
+  --gold-inv:#ffffff;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column}
+
+/* LOGIN */
+#login-screen{position:fixed;inset:0;z-index:50000;background:linear-gradient(135deg,#0a0a14 0%,#14101e 50%,#0a0e14 100%);display:flex;align-items:center;justify-content:center;animation:fadeIn .4s}
+:root.light #login-screen{background:linear-gradient(135deg,#e8e8f8 0%,#f0eaf8 50%,#e8f0f8 100%)}
+#login-screen.hidden{display:none}
+#login-screen.out{animation:fadeOut .4s forwards}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeOut{from{opacity:1}to{opacity:0}}
+.login-wrap{width:420px;max-width:95vw;background:var(--card);border:1px solid var(--border2);border-radius:20px;padding:46px 42px;box-shadow:0 40px 100px rgba(0,0,0,.6);animation:loginIn .5s cubic-bezier(.4,0,.2,1)}
+@keyframes loginIn{from{opacity:0;transform:translateY(24px) scale(.97)}to{opacity:1;transform:none}}
+.login-logo{font-family:'Playfair Display',serif;font-size:34px;color:var(--gold);margin-bottom:4px}
+.login-sub{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:2.5px;margin-bottom:34px}
+.login-label{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text2);margin-bottom:5px;display:block}
+.login-input{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 15px;font-family:inherit;font-size:14px;color:var(--text);outline:none;transition:all .2s;margin-bottom:14px}
+.login-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,.15)}
+.login-btn{width:100%;background:var(--gold);color:var(--gold-inv);border:none;border-radius:10px;padding:13px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;margin-top:4px}
+.login-btn:hover{background:var(--gold2);transform:translateY(-1px);box-shadow:0 4px 16px rgba(201,168,76,.3)}
+.login-err{font-size:12px;color:var(--danger);margin-top:10px;text-align:center;min-height:18px}
+.login-hint{font-size:11px;color:var(--text2);text-align:center;margin-top:18px;opacity:.65}
+
+/* CHROME */
+#shell{display:none;flex-direction:column;height:100vh;overflow:hidden}
+.wctrl{display:flex;gap:7px;padding:10px 14px 0;flex-shrink:0;background:var(--cr-frame)}
+.wdot{width:12px;height:12px;border-radius:50%;cursor:pointer;transition:filter .15s}.wdot:hover{filter:brightness(1.3)}
+.wd-r{background:#ff5f57}.wd-y{background:#febc2e}.wd-g{background:#28c840}
+.tabbar{background:var(--cr-tabbar);display:flex;align-items:flex-end;padding:6px 8px 0;gap:1px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;flex-shrink:0}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px 8px 0 0;cursor:pointer;font-size:12px;font-weight:500;color:var(--cr-tab-muted);background:var(--cr-tab-bg);min-width:120px;max-width:190px;flex-shrink:0;border:1px solid transparent;border-bottom:none;transition:all .15s;animation:tabIn .18s ease}
+.tab:hover:not(.tab-on){background:var(--cr-tab-hover);color:var(--cr-tab-txt)}
+.tab.tab-on{background:var(--cr-tab-active);color:var(--cr-tab-txt);border-color:var(--cr-border);border-bottom-color:var(--cr-tab-active);z-index:2}
+@keyframes tabIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.tab-fav{font-size:13px;flex-shrink:0}.tab-lbl{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tab-x{width:16px;height:16px;border:none;background:none;border-radius:50%;color:var(--cr-tab-muted);font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.tab-x:hover{background:rgba(255,255,255,.15);color:var(--cr-tab-txt)}
+.tab-add{width:26px;height:26px;border:none;border-radius:50%;background:none;color:var(--cr-tab-muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:0 4px 4px;flex-shrink:0;transition:all .15s}
+.tab-add:hover{background:var(--cr-tab-hover);color:var(--cr-tab-txt)}
+.toolbar{background:var(--cr-toolbar);border-bottom:1px solid var(--cr-border);padding:7px 12px;display:flex;align-items:center;gap:6px;flex-shrink:0}
+.tbtn{width:30px;height:30px;border:none;border-radius:50%;background:none;color:var(--cr-tab-muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;flex-shrink:0}
+.tbtn:hover{background:var(--cr-url-bg)}
+.addr-bar{flex:1;background:var(--cr-url-bg);border:1.5px solid transparent;border-radius:20px;padding:5px 14px;display:flex;align-items:center;gap:7px;min-width:0;cursor:text;transition:all .2s}
+.addr-bar:focus-within{border-color:#6b8cde;box-shadow:0 0 0 3px rgba(107,140,222,.2)}
+.addr-lock{font-size:11px;color:var(--cr-tab-muted)}
+.addr-in{background:none;border:none;outline:none;font-size:13px;color:var(--cr-url-txt);font-family:inherit;flex:1;min-width:0}
+.usr-chip{display:flex;align-items:center;gap:7px;padding:4px 10px 4px 4px;background:var(--cr-url-bg);border:1px solid var(--cr-border);border-radius:20px;cursor:pointer;transition:background .15s;flex-shrink:0}
+.usr-chip:hover{background:var(--cr-tab-hover)}
+.usr-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--gold-inv);flex-shrink:0}
+.usr-nm{font-size:12px;color:var(--cr-tab-txt);font-weight:500;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t-pill{position:relative;width:46px;height:24px;flex-shrink:0}
+.t-pill input{opacity:0;width:0;height:0;position:absolute}
+.t-track{position:absolute;inset:0;background:var(--cr-url-bg);border:1px solid var(--cr-border);border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:0 4px;font-size:10px}
+.t-thumb{position:absolute;top:3px;left:3px;width:17px;height:17px;background:var(--gold);border-radius:50%;transition:transform .28s cubic-bezier(.4,0,.2,1);pointer-events:none;z-index:1}
+.t-pill input:checked~.t-thumb{transform:translateX(21px)}
+
+/* PAGES */
+.pages{flex:1;background:var(--bg);overflow:hidden;position:relative}
+.page{display:none;height:100%;overflow:hidden;animation:pgIn .15s ease}
+.page.page-on{display:flex;flex-direction:column}
+@keyframes pgIn{from{opacity:0}to{opacity:1}}
+
+/* NEW TAB */
+.nt-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;overflow:auto;padding:30px}
+.nt-logo{font-family:'Playfair Display',serif;font-size:52px;color:var(--gold)}
+.nt-sb{width:520px;max-width:92vw;background:var(--card);border:1px solid var(--border);border-radius:24px;padding:12px 20px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 20px rgba(0,0,0,.3)}
+.nt-sb input{background:none;border:none;outline:none;font-size:15px;color:var(--text);font-family:inherit;flex:1}
+.nt-sb input::placeholder{color:var(--text2)}
+.nt-links{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;max-width:700px}
+.nt-lnk{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 14px;border-radius:12px;cursor:pointer;transition:background .15s;min-width:80px}
+.nt-lnk:hover{background:var(--card)}
+.nt-ico{width:48px;height:48px;border-radius:12px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px}
+.nt-lbl{font-size:12px;color:var(--text2);text-align:center}
+
+/* APP SHELL */
+.app-shell{display:flex;height:100%;overflow:hidden}
+.sidebar{width:216px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sb-logo{padding:18px 18px 14px;border-bottom:1px solid var(--border)}
+.sb-logo-nm{font-family:'Playfair Display',serif;font-size:18px;color:var(--gold)}
+.sb-logo-sub{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:2px;margin-top:2px}
+.sb-nav{padding:10px 8px;flex:1}
+.sb-sec{font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--text2);padding:8px 10px 4px;opacity:.7}
+.sb-itm{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--text2);transition:all .15s;margin-bottom:1px}
+.sb-itm:hover{background:var(--card);color:var(--text)}
+.sb-itm.on{background:var(--gold-dim);color:var(--gold)}
+.sb-ico{font-size:14px;width:18px;text-align:center;flex-shrink:0}
+.port-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0}
+.sb-stats{padding:14px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--text2)}
+.sb-srow{display:flex;justify-content:space-between;margin-bottom:4px}
+.sb-srow span:last-child{color:var(--text);font-weight:500}
+.app-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.inner-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:11px 22px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:12px;flex-wrap:wrap}
+.inner-title{font-family:'Playfair Display',serif;font-size:19px;color:var(--text);white-space:nowrap}
+.inner-acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.content{flex:1;overflow-y:auto;padding:0}
+
+/* NOTION DB TOOLBAR */
+.notion-db{display:flex;flex-direction:column;height:100%;overflow:hidden}
+.notion-toolbar{display:flex;align-items:center;gap:6px;padding:10px 22px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;overflow-x:auto;scrollbar-width:none;flex-wrap:wrap;row-gap:6px}
+.notion-toolbar::-webkit-scrollbar{display:none}
+.ndb-vbtns{display:flex;gap:2px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:3px}
+.ndb-vbtn{padding:4px 11px;border:none;background:none;border-radius:6px;font-family:inherit;font-size:12px;color:var(--text2);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px}
+.ndb-vbtn.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.ndb-sep{width:1px;height:24px;background:var(--border);margin:0 4px}
+.ndb-btn{display:flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--border);border-radius:7px;background:transparent;font-family:inherit;font-size:12px;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap}
+.ndb-btn:hover{background:var(--card);color:var(--text);border-color:var(--gold)}
+.ndb-btn.active{background:var(--gold-dim);color:var(--gold);border-color:rgba(201,168,76,.35)}
+.ndb-count{margin-left:auto;font-size:12px;color:var(--text2);white-space:nowrap}
+.filter-panel{background:var(--card);border-bottom:1px solid var(--border);padding:10px 22px;display:none;align-items:center;gap:8px;flex-wrap:wrap}
+.filter-panel.open{display:flex}
+.filter-chip{display:flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:12px;color:var(--text)}
+.fi-mini{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:2px 6px;font-family:inherit;font-size:12px;color:var(--text);outline:none}
+.fi-mini:focus{border-color:var(--gold)}
+.prop-panel{background:var(--card);border-bottom:1px solid var(--border);padding:8px 22px;display:none;align-items:center;gap:8px;flex-wrap:wrap}
+.prop-panel.open{display:flex}
+.prop-chip{display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;color:var(--text2);background:var(--card2);transition:all .15s;user-select:none}
+.prop-chip.on{background:var(--gold-dim);color:var(--gold);border-color:rgba(201,168,76,.35)}
+
+/* TABLE */
+.notion-table-wrap{flex:1;overflow:auto;padding:0 22px 22px}
+.notion-table{width:100%;border-collapse:collapse;font-size:13px}
+.notion-table th{background:var(--surface);padding:8px 12px;text-align:left;font-size:10px;font-weight:500;color:var(--text2);border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:1}
+.notion-table th .th-inner{display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none}
+.notion-table th .th-inner:hover{color:var(--text)}
+.sort-arr{font-size:10px;color:var(--text2);opacity:.4}.sort-arr.on{opacity:1;color:var(--gold)}
+.notion-table td{padding:10px 12px;border-bottom:1px solid rgba(42,42,58,.5);vertical-align:middle;color:var(--text)}
+.notion-table tr:hover td{background:rgba(201,168,76,.025)}
+.notion-table tr:last-child td{border-bottom:none}
+.td-acts{display:flex;gap:4px;align-items:center}
+
+/* GALLERY */
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;padding:20px 22px}
+.g-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:all .2s}
+.g-card:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.g-card-hdr{height:76px;display:flex;align-items:center;justify-content:center;font-size:30px;background:var(--card2)}
+.g-card-body{padding:13px}
+.g-card-title{font-weight:600;font-size:14px;margin-bottom:7px;color:var(--text)}
+.g-prop{display:flex;gap:6px;font-size:12px;margin-bottom:3px}
+.g-prop-l{color:var(--text2);min-width:70px;flex-shrink:0}.g-prop-v{color:var(--text)}
+
+/* KANBAN */
+.kanban-wrap{display:flex;gap:14px;padding:20px 22px;overflow-x:auto;height:100%;align-items:flex-start}
+.k-col{min-width:230px;max-width:260px;flex-shrink:0}
+.k-col-hdr{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1px;padding:6px 4px;display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.k-cnt{background:var(--card2);border-radius:10px;padding:1px 7px;font-size:11px;color:var(--text2)}
+.k-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer;transition:all .15s}
+.k-card:hover{border-color:var(--gold);transform:translateX(2px)}
+.k-card-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:5px}
+.k-card-meta{font-size:11px;color:var(--text2)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:14px;font-size:11px;font-weight:500;white-space:nowrap}
+.bg-g{background:rgba(76,201,164,.15);color:var(--success)}.bg-r{background:rgba(224,92,92,.15);color:var(--danger)}
+.bg-w{background:rgba(224,154,60,.15);color:var(--warn)}.bg-b{background:rgba(107,140,222,.15);color:var(--blue)}
+.bg-x{background:rgba(100,100,140,.15);color:var(--text2)}.bg-p{background:rgba(164,92,224,.15);color:var(--purple)}
+.bg-gold{background:var(--gold-dim);color:var(--gold)}
+.chip{display:inline-flex;align-items:center;gap:4px;background:var(--gold-dim);border:1px solid rgba(201,168,76,.25);border-radius:14px;padding:2px 9px;font-size:11px;color:var(--gold);cursor:pointer;transition:background .15s}
+.chip:hover{background:rgba(201,168,76,.22)}
+
+/* BUTTONS */
+.btn{padding:7px 14px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.btn-gold{background:var(--gold);color:var(--gold-inv)}.btn-gold:hover{background:var(--gold2)}
+.btn-out{background:transparent;border:1px solid var(--border);color:var(--text)}.btn-out:hover{border-color:var(--gold);color:var(--gold)}
+.btn-del{background:rgba(224,92,92,.1);color:var(--danger);border:1px solid rgba(224,92,92,.25)}.btn-del:hover{background:rgba(224,92,92,.2)}
+.btn-ghost{background:none;border:none;color:var(--text2);padding:5px 8px}.btn-ghost:hover{color:var(--text);background:var(--card)}
+.btn-sm{padding:4px 10px;font-size:12px}.btn-ico{width:28px;height:28px;padding:0;justify-content:center;font-size:13px}
+
+/* SUMCARDS */
+.sc-grid{display:grid;gap:14px;margin-bottom:20px}
+.sc4{grid-template-columns:repeat(4,1fr)}.sc3{grid-template-columns:repeat(3,1fr)}.sc2{grid-template-columns:repeat(2,1fr)}
+.scard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden}
+.scard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.sc-gold::before{background:var(--gold)}.sc-green::before{background:var(--success)}
+.sc-red::before{background:var(--danger)}.sc-blue::before{background:var(--blue)}
+.sc-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text2);margin-bottom:8px}
+.sc-val{font-size:24px;font-weight:600;font-family:'Playfair Display',serif;color:var(--text)}
+.sc-sub{font-size:11px;color:var(--text2);margin-top:4px}
+
+/* MODAL */
+.mov{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:9000;display:none;align-items:center;justify-content:center}
+.mov.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border2);border-radius:16px;width:580px;max-width:96vw;max-height:92vh;overflow-y:auto;padding:26px;animation:mdUp .22s ease;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+@keyframes mdUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.mhdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.mhdr h2{font-family:'Playfair Display',serif;font-size:20px;color:var(--text)}
+.mx{background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;padding:4px;border-radius:6px}
+.mx:hover{color:var(--text)}
+.mftr{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.fca{grid-column:1/-1}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text2)}
+.fg input,.fg select,.fg textarea{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-family:inherit;font-size:13px;color:var(--text);outline:none;transition:border-color .15s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--gold)}
+.fg textarea{resize:vertical;min-height:65px}
+.fg select option{background:var(--card);color:var(--text)}
+.fi{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-family:inherit;font-size:13px;color:var(--text);outline:none;transition:border-color .15s}
+.fi:focus{border-color:var(--gold)}.fi::placeholder{color:var(--text2)}
+select.fi option{background:var(--card);color:var(--text)}
+
+/* CENTER-PEAK */
+.cpov{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);z-index:10000;display:none;align-items:center;justify-content:center}
+.cpov.open{display:flex}
+.cp{background:var(--surface);border:1px solid var(--border2);border-radius:20px;width:820px;max-width:97vw;max-height:94vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 40px 100px rgba(0,0,0,.6);animation:cpIn .25s cubic-bezier(.4,0,.2,1)}
+.cp-lg{width:1000px}
+@keyframes cpIn{from{opacity:0;transform:scale(.96) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.cp-hdr{background:var(--card);border-bottom:1px solid var(--border);padding:16px 22px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.cp-hdr h2{font-family:'Playfair Display',serif;font-size:19px;color:var(--text);flex:1}
+.cp-tabs{display:flex;gap:2px;background:var(--card2);border-radius:8px;padding:3px}
+.cptab{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;color:var(--text2);border:none;background:none;font-family:inherit;transition:all .15s}
+.cptab.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.cp-body{flex:1;overflow-y:auto;padding:22px}
+.cp-ftr{background:var(--card);border-top:1px solid var(--border);padding:13px 22px;display:flex;gap:10px;justify-content:flex-end;flex-shrink:0}
+.cp-panel{display:none}.cp-panel.on{display:block}
+
+/* USER MANAGEMENT */
+.usr-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;margin-bottom:10px;transition:border-color .15s}
+.usr-card:hover{border-color:var(--border2)}
+.usr-av-lg{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--gold-inv);flex-shrink:0}
+.usr-info{flex:1}
+.usr-name-lg{font-size:14px;font-weight:600;color:var(--text)}
+.usr-email{font-size:12px;color:var(--text2)}
+.usr-role{padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600}
+.role-admin{background:rgba(201,168,76,.15);color:var(--gold)}
+.role-manager{background:rgba(107,140,222,.15);color:var(--blue)}
+.role-viewer{background:rgba(100,100,140,.15);color:var(--text2)}
+.role-owner{background:rgba(164,92,224,.15);color:var(--purple)}
+.perm-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.perm-row{display:flex;align-items:center;justify-content:space-between;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 14px}
+.perm-lbl{font-size:13px;color:var(--text)}.perm-sub{font-size:11px;color:var(--text2)}
+.toggle-sw{position:relative;width:36px;height:20px;flex-shrink:0}
+.toggle-sw input{opacity:0;width:0;height:0;position:absolute}
+.sw-track{position:absolute;inset:0;background:var(--border);border-radius:10px;cursor:pointer;transition:background .2s}
+.sw-thumb{position:absolute;top:3px;left:3px;width:14px;height:14px;background:#fff;border-radius:50%;transition:transform .2s;pointer-events:none}
+.toggle-sw input:checked~.sw-track{background:var(--gold)}
+.toggle-sw input:checked~.sw-thumb{transform:translateX(16px)}
+
+/* PORTFOLIO */
+.port-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;margin-bottom:10px;transition:all .15s}
+.port-card:hover{border-color:var(--gold)}
+
+/* PREDPIS */
+.predpis-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.predpis-row:last-child{border-bottom:none}
+.predpis-lbl{flex:1;font-size:13px;color:var(--text);font-weight:500}
+.predpis-sub{font-size:11px;color:var(--text2);display:block;margin-top:2px}
+.predpis-total{background:var(--gold-dim);border:1px solid rgba(201,168,76,.25);border-radius:10px;padding:14px 16px;margin-top:14px;display:flex;align-items:center;justify-content:space-between}
+.zaloh-row{display:grid;grid-template-columns:1fr 150px 32px;gap:8px;align-items:center;margin-bottom:8px}
+
+/* DOCUMENTS */
+.doc-drop{border:2px dashed var(--border);border-radius:10px;padding:28px;text-align:center;color:var(--text2);cursor:pointer;transition:all .2s;margin-bottom:14px}
+.doc-drop:hover,.doc-drop.drag{border-color:var(--gold);background:var(--gold-dim);color:var(--text)}
+.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px}
+.doc-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:13px;display:flex;flex-direction:column;gap:7px;position:relative;transition:border-color .2s}
+.doc-card:hover{border-color:var(--gold)}
+.doc-ver{position:absolute;top:7px;right:7px;background:rgba(107,140,222,.2);color:var(--blue);border-radius:8px;font-size:9px;padding:1px 6px}
+.doc-ico{font-size:26px;text-align:center}.doc-nm{font-size:12px;font-weight:500;color:var(--text);word-break:break-word;line-height:1.4;text-align:center}
+.doc-meta{font-size:10px;color:var(--text2);text-align:center}.doc-acts{display:flex;gap:5px;justify-content:center}
+
+/* AUDIT LOG */
+.audit-entry{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid rgba(42,42,58,.5);position:relative}
+.audit-entry:last-child{border-bottom:none}
+.a-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.a-line{position:absolute;left:4px;top:22px;bottom:0;width:2px;background:var(--border)}
+.audit-entry:last-child .a-line{display:none}
+.a-body{flex:1}.a-action{font-size:13px;font-weight:500;color:var(--text)}
+.a-when{font-size:11px;color:var(--text2);margin-top:2px}
+.a-detail{font-size:12px;color:var(--text2);margin-top:5px;background:var(--card2);border-radius:6px;padding:6px 10px;font-family:'JetBrains Mono',monospace;line-height:1.6}
+.a-revert{font-size:11px;color:var(--gold);cursor:pointer;margin-top:5px;display:inline-flex;align-items:center;gap:4px;background:var(--gold-dim);border:1px solid rgba(201,168,76,.25);padding:2px 8px;border-radius:12px;transition:background .15s}
+.a-revert:hover{background:rgba(201,168,76,.22)}
+
+/* ALERTS */
+.alrt{background:rgba(224,154,60,.08);border:1px solid rgba(224,154,60,.28);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--warn);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.empty{text-align:center;padding:48px;color:var(--text2)}
+.empty-ico{font-size:36px;margin-bottom:10px}
+.empty h3{font-size:15px;color:var(--text);margin-bottom:5px}
+.empty p{font-size:12px}
+
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--border2)}
+@media(max-width:900px){.sc4{grid-template-columns:repeat(2,1fr)}.sidebar{width:180px}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-wrap">
+    <div class="login-logo">RentMaster</div>
+    <div class="login-sub">správa pronájmů</div>
+    <label class="login-label">Email nebo přihlašovací jméno</label>
+    <input class="login-input" id="l-user" placeholder="admin" type="text" onkeydown="if(event.key==='Enter')doLogin()">
+    <label class="login-label">Heslo</label>
+    <input class="login-input" id="l-pass" placeholder="••••••••" type="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Přihlásit se →</button>
+    <div class="login-err" id="l-err"></div>
+    <div class="login-hint">Demo: admin / admin123 &nbsp;·&nbsp; správce / spravce123</div>
+  </div>
+</div>
+
+<!-- CHROME SHELL -->
+<div id="shell">
+  <div class="wctrl"><div class="wdot wd-r"></div><div class="wdot wd-y"></div><div class="wdot wd-g"></div></div>
+  <div class="tabbar" id="tabbar"></div>
+  <div class="toolbar">
+    <button class="tbtn" onclick="openTab('home')" title="Domovská stránka">&#127968;</button>
+    <button class="tbtn" onclick="reloadActive()" title="Obnovit">&#10227;</button>
+    <div class="addr-bar"><span class="addr-lock">&#128274;</span><input class="addr-in" id="addr-in" readonly></div>
+    <label class="t-pill" title="Přepnout téma">
+      <input type="checkbox" id="themeChk" onchange="setTheme(this.checked)">
+      <div class="t-track"><span>🌙</span><span>☀️</span></div>
+      <div class="t-thumb"></div>
+    </label>
+    <div class="usr-chip" onclick="openTab('users')" id="usr-chip">
+      <div class="usr-av" id="hdr-av">A</div>
+      <span class="usr-nm" id="hdr-nm">Admin</span>
+    </div>
+    <button class="tbtn" onclick="logout()" title="Odhlásit se" style="font-size:13px">🚪</button>
+  </div>
+  <div class="pages" id="pages"></div>
+</div>
+
+<!-- MODALS -->
+<div class="mov" id="m-prop"><div class="modal">
+  <div class="mhdr"><h2 id="mp-t">Nová nemovitost</h2><button class="mx" onclick="closeM('m-prop')">✕</button></div>
+  <div class="fg2">
+    <div class="fg fca"><label>Název</label><input id="mp-name" placeholder="Byt 2+kk Vinohrady"></div>
+    <div class="fg fca"><label>Adresa</label><input id="mp-addr" placeholder="Mánesova 15, Praha 2"></div>
+    <div class="fg"><label>Typ</label><select id="mp-type"><option>Byt</option><option>Dům</option><option>Kancelář</option><option>Sklad</option><option>Garáž</option><option>Pozemek</option><option>Jiné</option></select></div>
+    <div class="fg"><label>Plocha (m²)</label><input id="mp-area" type="number" placeholder="52"></div>
+    <div class="fg"><label>Nájem / měsíc (Kč)</label><input id="mp-rent" type="number" placeholder="18000"></div>
+    <div class="fg"><label>Stav</label><select id="mp-status"><option value="volná">Volná</option><option value="obsazená">Obsazená</option><option value="rekonstrukce">Rekonstrukce</option></select></div>
+    <div class="fg"><label>Portfolio</label><select id="mp-portfolio"></select></div>
+    <div class="fg"><label>Rok výstavby</label><input id="mp-year" type="number" placeholder="1998"></div>
+    <div class="fg fca"><label>Poznámka</label><textarea id="mp-note" placeholder="Balkon, nová kuchyně..."></textarea></div>
+  </div>
+  <div class="mftr"><button class="btn btn-out" onclick="closeM('m-prop')">Zrušit</button><button class="btn btn-gold" onclick="saveProp()">Uložit</button></div>
+</div></div>
+
+<div class="mov" id="m-tenant"><div class="modal">
+  <div class="mhdr"><h2 id="mt-t">Nový nájemník</h2><button class="mx" onclick="closeM('m-tenant')">✕</button></div>
+  <div class="fg2">
+    <div class="fg"><label>Jméno</label><input id="mt-fn" placeholder="Jan"></div>
+    <div class="fg"><label>Příjmení</label><input id="mt-ln" placeholder="Novák"></div>
+    <div class="fg"><label>Email</label><input id="mt-email" type="email"></div>
+    <div class="fg"><label>Telefon</label><input id="mt-phone" placeholder="+420 777 123 456"></div>
+    <div class="fg"><label>Datum narození</label><input id="mt-dob" type="date"></div>
+    <div class="fg"><label>OP / Pas číslo</label><input id="mt-id" placeholder="AB123456"></div>
+    <div class="fg fca"><label>Trvalá adresa</label><input id="mt-addr"></div>
+    <div class="fg"><label>Zaměstnavatel</label><input id="mt-emp"></div>
+    <div class="fg"><label>Čistý příjem (Kč)</label><input id="mt-inc" type="number"></div>
+    <div class="fg fca"><label>Poznámka</label><textarea id="mt-note"></textarea></div>
+  </div>
+  <div class="mftr"><button class="btn btn-out" onclick="closeM('m-tenant')">Zrušit</button><button class="btn btn-gold" onclick="saveTenant()">Uložit</button></div>
+</div></div>
+
+<div class="mov" id="m-contract"><div class="modal">
+  <div class="mhdr"><h2 id="mc-t">Nová smlouva</h2><button class="mx" onclick="closeM('m-contract')">✕</button></div>
+  <div class="fg2">
+    <div class="fg"><label>Nájemník</label><select id="mc-tenant"></select></div>
+    <div class="fg"><label>Nemovitost</label><select id="mc-prop"></select></div>
+    <div class="fg"><label>Datum od</label><input id="mc-from" type="date"></div>
+    <div class="fg"><label>Datum do</label><input id="mc-to" type="date"></div>
+    <div class="fg"><label>Měsíční nájem (Kč)</label><input id="mc-rent" type="number"></div>
+    <div class="fg"><label>Kauce (Kč)</label><input id="mc-dep" type="number"></div>
+    <div class="fg"><label>Den splatnosti</label><input id="mc-day" type="number" placeholder="10" min="1" max="31"></div>
+    <div class="fg"><label>Stav</label><select id="mc-status"><option value="aktivní">Aktivní</option><option value="příprava">Příprava</option><option value="ukončená">Ukončená</option></select></div>
+    <div class="fg fca"><label>Poznámka</label><textarea id="mc-note"></textarea></div>
+  </div>
+  <div class="mftr"><button class="btn btn-out" onclick="closeM('m-contract')">Zrušit</button><button class="btn btn-gold" onclick="saveContract()">Uložit</button></div>
+</div></div>
+
+<div class="mov" id="m-payment"><div class="modal">
+  <div class="mhdr"><h2 id="mpa-t">Nová platba</h2><button class="mx" onclick="closeM('m-payment')">✕</button></div>
+  <div class="fg2">
+    <div class="fg"><label>Smlouva</label><select id="mpa-c"></select></div>
+    <div class="fg"><label>Měsíc / rok</label><input id="mpa-month" type="month"></div>
+    <div class="fg"><label>Částka (Kč)</label><input id="mpa-amt" type="number"></div>
+    <div class="fg"><label>Datum splatnosti</label><input id="mpa-due" type="date"></div>
+    <div class="fg"><label>Datum úhrady</label><input id="mpa-paid" type="date"></div>
+    <div class="fg"><label>Stav</label><select id="mpa-status"><option value="čeká">Čeká</option><option value="zaplaceno">Zaplaceno</option><option value="po splatnosti">Po splatnosti</option></select></div>
+    <div class="fg fca"><label>Poznámka</label><textarea id="mpa-note"></textarea></div>
+  </div>
+  <div class="mftr"><button class="btn btn-out" onclick="closeM('m-payment')">Zrušit</button><button class="btn btn-gold" onclick="savePayment()">Uložit</button></div>
+</div></div>
+
+<div class="mov" id="m-expense"><div class="modal">
+  <div class="mhdr"><h2>Nový výdaj</h2><button class="mx" onclick="closeM('m-expense')">✕</button></div>
+  <div class="fg2">
+    <div class="fg fca"><label>Popis</label><input id="me-desc" placeholder="Oprava kotle"></div>
+    <div class="fg"><label>Nemovitost</label><select id="me-prop"></select></div>
+    <div class="fg"><label>Kategorie</label><select id="me-cat"><option>Opravy a údržba</option><option>Pojištění</option><option>Daně a poplatky</option><option>Správa</option><option>Energie</option><option>Vybavení</option><option>Jiné</option></select></div>
+    <div class="fg"><label>Částka (Kč)</label><input id="me-amt" type="number"></div>
+    <div class="fg"><label>Datum</label><input id="me-date" type="date"></div>
+    <div class="fg fca"><label>Poznámka</label><textarea id="me-note"></textarea></div>
+  </div>
+  <div class="mftr"><button class="btn btn-out" onclick="closeM('m-expense')">Zrušit</button><button class="btn btn-gold" onclick="saveExpense()">Uložit</button></div>
+</div></div>
+
+<div class="mov" id="m-user"><div class="modal">
+  <div class="mhdr"><h2 id="mu-t">Nový uživatel</h2><button class="mx" onclick="closeM('m-user')">✕</button></div>
+  <div class="fg2">
+    <div class="fg"><label>Celé jméno</label><input id="mu-name" placeholder="Jan Novák"></div>
+    <div class="fg"><label>Login (email)</label><input id="mu-email" placeholder="jan@firma.cz"></div>
+    <div class="fg"><label>Heslo</label><input id="mu-pass" type="password" placeholder="min. 4 znaky"></div>
+    <div class="fg"><label>Role</label>
+      <select id="mu-role" onchange="onRoleChange()">
+        <option value="admin">Admin — plný přístup</option>
+        <option value="manager">Správce — správa dat</option>
+        <option value="owner">Vlastník — vlastní portfolio</option>
+        <option value="viewer">Čtenář — pouze přehled</option>
+      </select>
+    </div>
+    <div class="fg fca" id="mu-port-wrap"><label>Přiřazená portfolia (Ctrl+klik = více)</label>
+      <select id="mu-portfolio" multiple style="height:90px"></select>
+    </div>
+  </div>
+  <div style="margin-top:14px">
+    <div style="font-size:11px;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px">Oprávnění</div>
+    <div class="perm-grid" id="perm-grid"></div>
+  </div>
+  <div class="mftr"><button class="btn btn-out" onclick="closeM('m-user')">Zrušit</button><button class="btn btn-gold" onclick="saveUser()">Uložit</button></div>
+</div></div>
+
+<div class="mov" id="m-portfolio"><div class="modal">
+  <div class="mhdr"><h2 id="mpt-t">Nové portfolio</h2><button class="mx" onclick="closeM('m-portfolio')">✕</button></div>
+  <div class="fg2">
+    <div class="fg fca"><label>Název portfolia</label><input id="mpt-name" placeholder="Portfolio Praha"></div>
+    <div class="fg"><label>Vlastník / majitel</label><input id="mpt-owner" placeholder="Jméno vlastníka"></div>
+    <div class="fg"><label>Barva</label>
+      <select id="mpt-color">
+        <option value="#c9a84c">🟡 Zlatá</option><option value="#6b8cde">🔵 Modrá</option>
+        <option value="#4cc9a4">🟢 Zelená</option><option value="#e05c5c">🔴 Červená</option>
+        <option value="#a45ce0">🟣 Fialová</option><option value="#e09a3c">🟠 Oranžová</option>
+      </select>
+    </div>
+    <div class="fg"><label>IČO / DIČ</label><input id="mpt-ico" placeholder="12345678"></div>
+    <div class="fg fca"><label>Poznámka</label><textarea id="mpt-note"></textarea></div>
+  </div>
+  <div class="mftr"><button class="btn btn-out" onclick="closeM('m-portfolio')">Zrušit</button><button class="btn btn-gold" onclick="savePortfolio()">Uložit</button></div>
+</div></div>
+
+<!-- CENTER-PEAK: PŘEDPIS -->
+<div class="cpov" id="cp-predpis"><div class="cp">
+  <div class="cp-hdr">
+    <h2 id="predpis-title">Předpis nájemného</h2>
+    <div class="cp-tabs">
+      <button class="cptab on" onclick="cpTab('predpis','builder',this)">Sestavit</button>
+      <button class="cptab" onclick="cpTab('predpis','preview',this)">Náhled</button>
+    </div>
+    <button class="mx" onclick="closeCP('cp-predpis')" style="margin-left:8px">✕</button>
+  </div>
+  <div class="cp-body">
+    <div class="cp-panel on" id="cp-predpis-builder">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
+        <div class="predpis-row">
+          <div class="predpis-lbl">Nájemné<span class="predpis-sub">Základní nájem dle smlouvy</span></div>
+          <input class="fi" id="pr-rent" type="number" style="width:130px;text-align:right" placeholder="0" oninput="calcPredpis()">
+        </div>
+      </div>
+      <div style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-family:'Playfair Display',serif;font-size:15px;color:var(--text)">Zálohy — složky</div>
+          <span style="font-size:12px;color:var(--text2)">Přidejte libovolný počet složek</span>
+        </div>
+        <div id="zaloh-rows"></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <input class="fi" id="z-name" placeholder="Název složky (Teplo, Voda...)" style="flex:1">
+          <input class="fi" id="z-amt" type="number" placeholder="Kč" style="width:110px">
+          <button class="btn btn-gold btn-sm" onclick="addZaloh()">＋</button>
+        </div>
+      </div>
+      <div class="predpis-total">
+        <span style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--text2)">Celkem k úhradě</span>
+        <span style="font-family:'Playfair Display',serif;font-size:26px;color:var(--gold)" id="pr-total">0 Kč</span>
+      </div>
+      <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fg"><label>Splatnost</label><input id="pr-due" type="date" class="fi"></div>
+        <div class="fg"><label>Období (měsíc)</label><input id="pr-period" type="month" class="fi"></div>
+        <div class="fg" style="grid-column:1/-1"><label>Poznámka / VS</label><input id="pr-note" class="fi" placeholder="VS: 1234..."></div>
+      </div>
+    </div>
+    <div class="cp-panel" id="cp-predpis-preview">
+      <div id="predpis-preview-content" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;line-height:1.7"></div>
+    </div>
+  </div>
+  <div class="cp-ftr">
+    <button class="btn btn-out" onclick="closeCP('cp-predpis')">Zavřít</button>
+    <button class="btn btn-out" onclick="buildPredpisPreview()">Náhled →</button>
+    <button class="btn btn-gold" onclick="savePredpis()">💾 Uložit předpis</button>
+  </div>
+</div></div>
+
+<!-- CENTER-PEAK: DOKUMENTY -->
+<div class="cpov" id="cp-docs"><div class="cp cp-lg">
+  <div class="cp-hdr">
+    <h2 id="docs-title">Dokumenty nemovitosti</h2>
+    <div class="cp-tabs">
+      <button class="cptab on" onclick="cpTab('docs','list',this)">📁 Dokumenty</button>
+      <button class="cptab" onclick="cpTab('docs','audit',this)">📋 Auditní log</button>
+    </div>
+    <button class="mx" onclick="closeCP('cp-docs')" style="margin-left:8px">✕</button>
+  </div>
+  <div class="cp-body">
+    <div class="cp-panel on" id="cp-docs-list">
+      <div class="doc-drop" id="doc-drop-zone" onclick="document.getElementById('doc-file-in').click()" ondragover="docDragOver(event)" ondragleave="docDragLeave(event)" ondrop="docDrop(event)">
+        <div style="font-size:28px;margin-bottom:8px">📂</div>
+        <strong>Přetáhněte soubory sem</strong> nebo klikněte pro výběr<br>
+        <small style="margin-top:4px;display:block">PDF, Word, Excel, obrázky — libovolný formát</small>
+      </div>
+      <input type="file" id="doc-file-in" multiple style="display:none" onchange="docFilePicked(event)">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <select class="fi" id="doc-cat-f" onchange="renderDocs()">
+          <option value="">Všechny kategorie</option>
+          <option>List vlastnictví</option><option>Přihláška vlastníka</option>
+          <option>Evidenční list</option><option>Nájemní smlouva</option>
+          <option>Pojistná smlouva</option><option>Revizní zpráva</option>
+          <option>Technická dokumentace</option><option>Ostatní</option>
+        </select>
+        <span style="font-size:12px;color:var(--text2)" id="doc-cnt-lbl"></span>
+      </div>
+      <div class="doc-grid" id="doc-grid"></div>
+    </div>
+    <div class="cp-panel" id="cp-docs-audit"><div id="audit-log-content"></div></div>
+  </div>
+  <div class="cp-ftr">
+    <button class="btn btn-out" onclick="closeCP('cp-docs')">Zavřít</button>
+    <button class="btn btn-gold" onclick="document.getElementById('doc-file-in').click()">＋ Nahrát dokument</button>
+  </div>
+</div></div>
+
+<!-- Doc category picker -->
+<div class="cpov" id="cp-doc-cat"><div class="cp" style="width:420px">
+  <div class="cp-hdr"><h2>Kategorie dokumentu</h2><button class="mx" onclick="closeCP('cp-doc-cat')">✕</button></div>
+  <div class="cp-body">
+    <div class="fg" style="margin-bottom:14px"><label>Název dokumentu</label><input id="dcat-nm" class="fi"></div>
+    <div class="fg" style="margin-bottom:14px"><label>Kategorie</label>
+      <select id="dcat-sel" class="fi">
+        <option>List vlastnictví</option><option>Přihláška vlastníka</option><option>Evidenční list</option>
+        <option>Nájemní smlouva</option><option>Pojistná smlouva</option><option>Revizní zpráva</option>
+        <option>Technická dokumentace</option><option>Ostatní</option>
+      </select>
+    </div>
+    <div class="fg"><label>Poznámka</label><textarea id="dcat-note" class="fi" style="min-height:60px"></textarea></div>
+  </div>
+  <div class="cp-ftr">
+    <button class="btn btn-out" onclick="closeCP('cp-doc-cat')">Zrušit</button>
+    <button class="btn btn-gold" onclick="confirmDocUpload()">Nahrát →</button>
+  </div>
+</div></div>
+
+<script>
+'use strict';
+
+/* ═══ AUTH ═══════════════════════════════ */
+let currentUser = null;
+const DEFAULT_USERS = [
+  {id:'u1',name:'Admin',email:'admin',pass:'admin123',role:'admin',color:'#c9a84c',portfolios:[],
+   perms:{properties:true,tenants:true,contracts:true,payments:true,expenses:true,documents:true,predpisy:true,users:true,portfolios:true}},
+  {id:'u2',name:'Správce',email:'spravce',pass:'spravce123',role:'manager',color:'#6b8cde',portfolios:[],
+   perms:{properties:true,tenants:true,contracts:true,payments:true,expenses:true,documents:true,predpisy:true,users:false,portfolios:false}},
+];
+
+function getUsers(){try{const s=localStorage.getItem('rm_users');if(s)return JSON.parse(s);}catch(e){}return DEFAULT_USERS;}
+function saveUsers(u){try{localStorage.setItem('rm_users',JSON.stringify(u));}catch(e){}}
+
+function doLogin(){
+  const uv=document.getElementById('l-user').value.trim();
+  const pv=document.getElementById('l-pass').value;
+  const found=getUsers().find(u=>(u.email===uv||u.name===uv)&&u.pass===pv);
+  if(!found){document.getElementById('l-err').textContent='Nesprávné přihlašovací údaje';return;}
+  currentUser=found;
+  try{localStorage.setItem('rm_session',found.id);}catch(e){}
+  const ls=document.getElementById('login-screen');
+  ls.classList.add('out');
+  setTimeout(()=>{ls.classList.add('hidden');initApp();},380);
+}
+function tryAutoLogin(){
+  try{const sid=localStorage.getItem('rm_session');if(sid){const u=getUsers().find(x=>x.id===sid);if(u){currentUser=u;return true;}}}catch(e){}
+  return false;
+}
+function logout(){
+  currentUser=null;
+  try{localStorage.removeItem('rm_session');}catch(e){}
+  tabs=[];activeTab=null;tabCtr=0;
+  document.getElementById('pages').innerHTML='';
+  document.getElementById('tabbar').innerHTML='';
+  document.getElementById('shell').style.display='none';
+  document.getElementById('login-screen').classList.remove('hidden','out');
+  document.getElementById('l-user').value='';document.getElementById('l-pass').value='';
+  document.getElementById('l-err').textContent='';
+}
+function canDo(p){if(!currentUser)return false;if(currentUser.role==='admin')return true;return !!(currentUser.perms&&currentUser.perms[p]);}
+
+/* ═══ DATABASE ════════════════════════════ */
+let DB={properties:[],tenants:[],contracts:[],payments:[],expenses:[],predpisy:[],documents:[],auditLog:[],portfolios:[]};
+let editId=null;
+
+function loadDB(){
+  try{const s=localStorage.getItem('rm_db2');if(s){DB=JSON.parse(s);}}catch(e){}
+  if(!DB.portfolios)DB.portfolios=[];
+  if(!DB.predpisy)DB.predpisy=[];
+  if(!DB.documents)DB.documents=[];
+  if(!DB.auditLog)DB.auditLog=[];
+  if(!DB.properties.length)seedDB();
+}
+function saveDB(){try{localStorage.setItem('rm_db2',JSON.stringify(DB));}catch(e){}}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function fmt(n){return Number(n||0).toLocaleString('cs-CZ')+' Kč';}
+
+function seedDB(){
+  DB.portfolios=[
+    {id:'port1',name:'Portfolio Praha',owner:'Jan Novák',color:'#c9a84c',ico:'12345678',note:''},
+    {id:'port2',name:'Portfolio Brno',owner:'Petra Svobodová',color:'#6b8cde',ico:'87654321',note:''},
+  ];
+  DB.properties=[
+    {id:'p1',name:'Byt 2+kk Vinohrady',addr:'Mánesova 15, Praha 2',type:'Byt',area:52,rent:18000,status:'obsazená',portfolioId:'port1',year:2005,note:'Balkon'},
+    {id:'p2',name:'Byt 3+1 Žižkov',addr:'Seifertova 88, Praha 3',type:'Byt',area:75,rent:22000,status:'obsazená',portfolioId:'port1',year:1985,note:''},
+    {id:'p3',name:'Kancelář Smíchov',addr:'Nádražní 23, Praha 5',type:'Kancelář',area:40,rent:12000,status:'volná',portfolioId:'port2',year:2010,note:'Klimatizace'},
+    {id:'p4',name:'Garáž Dejvice',addr:'Jugoslávských partyzánů 1, Praha 6',type:'Garáž',area:18,rent:3500,status:'obsazená',portfolioId:'port2',year:1990,note:''},
+  ];
+  DB.tenants=[
+    {id:'t1',fn:'Lucie',ln:'Marková',email:'lucie@email.cz',phone:'+420 777 111 222',dob:'1988-04-12',idnum:'AB123456',addr:'Vinohradská 10, Praha 2',emp:'ČEZ a.s.',inc:55000,note:''},
+    {id:'t2',fn:'Petr',ln:'Dvořák',email:'petr@firma.cz',phone:'+420 602 234 567',dob:'1975-09-30',idnum:'CD789012',addr:'Olšanská 5, Praha 3',emp:'Freelancer',inc:80000,note:''},
+    {id:'t3',fn:'Jana',ln:'Horáčková',email:'jana@seznam.cz',phone:'+420 725 345 678',dob:'1992-12-01',idnum:'EF345678',addr:'Anděl, Praha 5',emp:'Unicorn a.s.',inc:62000,note:''},
+  ];
+  const tm=new Date().toISOString().slice(0,7);
+  const lm=new Date(new Date().setMonth(new Date().getMonth()-1)).toISOString().slice(0,7);
+  DB.contracts=[
+    {id:'c1',tid:'t1',pid:'p1',from:'2023-02-01',to:'2025-01-31',rent:18000,dep:36000,day:10,status:'aktivní',note:''},
+    {id:'c2',tid:'t2',pid:'p2',from:'2022-09-01',to:'2026-08-31',rent:22000,dep:44000,day:5,status:'aktivní',note:''},
+    {id:'c3',tid:'t3',pid:'p4',from:'2024-01-01',to:'2025-12-31',rent:3500,dep:7000,day:15,status:'aktivní',note:''},
+  ];
+  DB.payments=[
+    {id:'q1',cid:'c1',month:lm,amt:18000,due:lm+'-10',paid:lm+'-09',status:'zaplaceno',note:''},
+    {id:'q2',cid:'c2',month:lm,amt:22000,due:lm+'-05',paid:lm+'-04',status:'zaplaceno',note:''},
+    {id:'q3',cid:'c1',month:tm,amt:18000,due:tm+'-10',paid:'',status:'čeká',note:''},
+    {id:'q4',cid:'c2',month:tm,amt:22000,due:tm+'-05',paid:'',status:'po splatnosti',note:''},
+    {id:'q5',cid:'c3',month:tm,amt:3500,due:tm+'-15',paid:'',status:'čeká',note:''},
+  ];
+  DB.expenses=[
+    {id:'e1',desc:'Oprava kotle',pid:'p1',cat:'Opravy a údržba',amt:4500,date:'2024-12-15',note:''},
+    {id:'e2',desc:'Pojistné 2025',pid:'p2',cat:'Pojištění',amt:8200,date:'2025-01-02',note:''},
+    {id:'e3',desc:'Malování',pid:'p3',cat:'Opravy a údržba',amt:12000,date:'2025-01-20',note:''},
+  ];
+  saveDB();
+}
+
+function tn(id){const t=DB.tenants.find(x=>x.id===id);return t?t.fn+' '+t.ln:'—';}
+function pn(id){const p=DB.properties.find(x=>x.id===id);return p?p.name:'—';}
+function portName(id){const p=DB.portfolios.find(x=>x.id===id);return p?p.name:'—';}
+function portColor(id){const p=DB.portfolios.find(x=>x.id===id);return p?p.color:'#888';}
+
+function bdg(s){
+  const m={obsazená:'bg-g',aktivní:'bg-g',zaplaceno:'bg-g',volná:'bg-b',příprava:'bg-b',rekonstrukce:'bg-w',čeká:'bg-w','po splatnosti':'bg-r',ukončená:'bg-x'};
+  return `<span class="badge ${m[s]||'bg-x'}">${s}</span>`;
+}
+function portBadge(pid){
+  const p=DB.portfolios.find(x=>x.id===pid);if(!p)return '';
+  return `<span class="badge" style="background:${p.color}22;color:${p.color};border:1px solid ${p.color}44"><span class="port-dot" style="background:${p.color};margin-right:4px"></span>${p.name}</span>`;
+}
+function eRow(c,t,s){return `<tr><td colspan="${c}"><div class="empty"><div class="empty-ico">📋</div><h3>${t}</h3><p>${s}</p></div></td></tr>`;}
+
+/* ═══ PORTFOLIO FILTER ════════════════════ */
+let activePortfolio=null;
+function getVProps(){
+  let r=DB.properties;
+  if(currentUser&&currentUser.role==='owner'&&currentUser.portfolios&&currentUser.portfolios.length)
+    r=r.filter(p=>currentUser.portfolios.includes(p.portfolioId));
+  if(activePortfolio)r=r.filter(p=>p.portfolioId===activePortfolio);
+  return r;
+}
+function getVContracts(){const pids=new Set(getVProps().map(p=>p.id));return DB.contracts.filter(c=>pids.has(c.pid));}
+function getVPayments(){const cids=new Set(getVContracts().map(c=>c.id));return DB.payments.filter(p=>cids.has(p.cid));}
+function getVExpenses(){const pids=new Set(getVProps().map(p=>p.id));return DB.expenses.filter(e=>!e.pid||pids.has(e.pid));}
+function setPortFilter(id){activePortfolio=id;refreshAll();}
+
+/* ═══ TAB SYSTEM ══════════════════════════ */
+let tabs=[],activeTab=null,tabCtr=0;
+const META={
+  home:{title:'Nová karta',fav:'✨',url:'rentmaster://nova-karta'},
+  dashboard:{title:'Přehled',fav:'🏠',url:'rentmaster://prehled'},
+  properties:{title:'Nemovitosti',fav:'🏢',url:'rentmaster://nemovitosti'},
+  tenants:{title:'Nájemníci',fav:'👥',url:'rentmaster://najemnici'},
+  contracts:{title:'Smlouvy',fav:'📄',url:'rentmaster://smlouvy'},
+  payments:{title:'Platby',fav:'💰',url:'rentmaster://platby'},
+  expenses:{title:'Výdaje',fav:'🔧',url:'rentmaster://vydaje'},
+  portfolios:{title:'Portfolia',fav:'📂',url:'rentmaster://portfolia'},
+  users:{title:'Uživatelé',fav:'👤',url:'rentmaster://uzivatele'},
+  settings:{title:'Nastavení',fav:'⚙️',url:'rentmaster://nastaveni'},
+};
+
+function openTab(key,reuse=true){
+  if(reuse){const ex=tabs.find(t=>t.key===key);if(ex){activateTab(ex.id);return;}}
+  const id='t'+(++tabCtr);const m=META[key]||META.home;
+  tabs.push({id,key,title:m.title,fav:m.fav,url:m.url});
+  renderTabBar();buildPageDOM(id,key);activateTab(id);
+}
+function closeTab(id,e){
+  if(e)e.stopPropagation();
+  const idx=tabs.findIndex(t=>t.id===id);if(idx<0)return;
+  tabs.splice(idx,1);document.getElementById('pg-'+id)?.remove();
+  if(!tabs.length){openTab('home');return;}
+  if(activeTab===id)activateTab(tabs[Math.min(idx,tabs.length-1)].id);
+  else renderTabBar();
+}
+function activateTab(id){
+  activeTab=id;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('page-on'));
+  document.getElementById('pg-'+id)?.classList.add('page-on');
+  renderTabBar();
+  const tab=tabs.find(t=>t.id===id);
+  document.getElementById('addr-in').value=tab?tab.url:'';
+  if(tab&&tab.key!=='home')refreshPage(id);
+}
+function renderTabBar(){
+  const bar=document.getElementById('tabbar');bar.innerHTML='';
+  tabs.forEach(tab=>{
+    const d=document.createElement('div');
+    d.className='tab'+(tab.id===activeTab?' tab-on':'');
+    d.onclick=()=>activateTab(tab.id);
+    d.innerHTML=`<span class="tab-fav">${tab.fav}</span><span class="tab-lbl">${tab.title}</span><button class="tab-x" onclick="closeTab('${tab.id}',event)">✕</button>`;
+    bar.appendChild(d);
+  });
+  const nb=document.createElement('button');nb.className='tab-add';nb.textContent='+';nb.title='Nová karta';nb.onclick=()=>openTab('home',false);bar.appendChild(nb);
+}
+function reloadActive(){if(activeTab)refreshPage(activeTab);}
+
+/* ═══ PAGE BUILDER ════════════════════════ */
+function buildPageDOM(id,key){
+  const pages=document.getElementById('pages');
+  const div=document.createElement('div');div.className='page';div.id='pg-'+id;
+  div.innerHTML=(key==='home')?buildHome():buildShell(key);
+  pages.appendChild(div);
+}
+function buildHome(){
+  const links=[{k:'dashboard',i:'🏠',l:'Přehled'},{k:'properties',i:'🏢',l:'Nemovitosti'},{k:'tenants',i:'👥',l:'Nájemníci'},{k:'contracts',i:'📄',l:'Smlouvy'},{k:'payments',i:'💰',l:'Platby'},{k:'expenses',i:'🔧',l:'Výdaje'},{k:'portfolios',i:'📂',l:'Portfolia'},{k:'settings',i:'⚙️',l:'Nastavení'}];
+  return `<div class="nt-wrap"><div class="nt-logo">RentMaster</div>
+    <div class="nt-sb"><span style="color:var(--text2)">🔍</span><input placeholder="Přejít na stránku…" onkeydown="if(event.key==='Enter')ntSearch(this.value)"></div>
+    <div class="nt-links">${links.map(l=>`<div class="nt-lnk" onclick="openTab('${l.k}')"><div class="nt-ico">${l.i}</div><div class="nt-lbl">${l.l}</div></div>`).join('')}</div>
+  </div>`;
+}
+function ntSearch(v){
+  const map={přehled:'dashboard',nemovitost:'properties',nájemník:'tenants',smlouv:'contracts',platb:'payments',výdaj:'expenses',portfolio:'portfolios',nastavení:'settings',uživatel:'users'};
+  for(const[k,p]of Object.entries(map)){if(v.toLowerCase().includes(k)){openTab(p);return;}}
+}
+
+function buildShell(key){
+  const titles={dashboard:'Přehled',properties:'Nemovitosti',tenants:'Nájemníci',contracts:'Smlouvy',payments:'Platby',expenses:'Výdaje',portfolios:'Portfolia',users:'Správa uživatelů',settings:'Nastavení'};
+  const addMap={
+    properties:{fn:"openM('m-prop')",l:'＋ Nemovitost',p:'properties'},
+    tenants:{fn:"openM('m-tenant')",l:'＋ Nájemník',p:'tenants'},
+    contracts:{fn:"openM('m-contract')",l:'＋ Smlouva',p:'contracts'},
+    payments:{fn:"openM('m-payment')",l:'＋ Platbu',p:'payments'},
+    expenses:{fn:"openM('m-expense')",l:'＋ Výdaj',p:'expenses'},
+    portfolios:{fn:"openM('m-portfolio')",l:'＋ Portfolio',p:'portfolios'},
+    users:{fn:"openM('m-user')",l:'＋ Uživatel',p:'users'},
+  };
+  const a=addMap[key];
+  const addBtn=a&&canDo(a.p)?`<button class="btn btn-gold" onclick="${a.fn}">${a.l}</button>`:'';
+
+  const portItems=DB.portfolios.map(pt=>`
+    <div class="sb-itm${activePortfolio===pt.id?' on':''}" onclick="setPortFilter('${pt.id}')">
+      <span class="sb-ico"><span class="port-dot" style="background:${pt.color}"></span></span>
+      <span>${pt.name}</span>
+    </div>`).join('');
+
+  const navItems=[
+    {k:'dashboard',i:'🏠',l:'Přehled'},
+    {k:'properties',i:'🏢',l:'Nemovitosti'},
+    {k:'tenants',i:'👥',l:'Nájemníci'},
+    {k:'contracts',i:'📄',l:'Smlouvy'},
+    {k:'payments',i:'💰',l:'Platby'},
+    {k:'expenses',i:'🔧',l:'Výdaje'},
+    {k:'portfolios',i:'📂',l:'Portfolia'},
+  ].map(n=>`<div class="sb-itm${n.k===key?' on':''}" onclick="openTab('${n.k}')"><span class="sb-ico">${n.i}</span><span>${n.l}</span></div>`).join('');
+
+  const sysNav=canDo('users')?`
+    <div class="sb-sec">Systém</div>
+    <div class="sb-itm${key==='users'?' on':''}" onclick="openTab('users')"><span class="sb-ico">👤</span><span>Uživatelé</span></div>
+    <div class="sb-itm${key==='settings'?' on':''}" onclick="openTab('settings')"><span class="sb-ico">⚙️</span><span>Nastavení</span></div>`:'';
+
+  return `<div class="app-shell">
+    <div class="sidebar">
+      <div class="sb-logo"><div class="sb-logo-nm">RentMaster</div><div class="sb-logo-sub">správa pronájmů</div></div>
+      <nav class="sb-nav">
+        <div class="sb-sec">Navigace</div>${navItems}
+        ${DB.portfolios.length?`<div class="sb-sec">Portfolia</div>
+          <div class="sb-itm${!activePortfolio?' on':''}" onclick="setPortFilter(null)"><span class="sb-ico">🌐</span><span>Vše</span></div>
+          ${portItems}`:''}
+        ${sysNav}
+      </nav>
+      <div class="sb-stats">
+        <div class="sb-srow"><span>Obsazenost</span><span id="sbocc-${key}">—</span></div>
+        <div class="sb-srow"><span>Příjem/měs.</span><span id="sbinc-${key}">—</span></div>
+        <div class="sb-srow"><span>Dlužné</span><span id="sbdue-${key}" style="color:var(--danger)">—</span></div>
+      </div>
+    </div>
+    <div class="app-main">
+      <div class="inner-bar">
+        <div class="inner-title">${titles[key]||key}</div>
+        <div class="inner-acts">
+          ${activePortfolio?`<span class="badge bg-b" style="font-size:12px;padding:4px 10px;cursor:pointer" onclick="setPortFilter(null)">📂 ${portName(activePortfolio)} ✕</span>`:''}
+          ${addBtn}
+        </div>
+      </div>
+      <div class="content notion-db" id="view-${key}"><div style="padding:40px;text-align:center;color:var(--text2)">Načítání…</div></div>
+    </div>
+  </div>`;
+}
+
+/* ═══ NOTION DB ENGINE ════════════════════ */
+let ndbState={};
+
+function notionDB(el,{vk,cols,rows,filters}){
+  if(!ndbState[vk])ndbState[vk]={view:'table',filters:{},visibleCols:cols.map(c=>c.k),sort:null,sortDir:'asc',search:'',showFilters:false,showProps:false};
+  const st=ndbState[vk];
+
+  // Apply filters + search
+  let data=[...rows];
+  Object.entries(st.filters).forEach(([k,v])=>{if(v)data=data.filter(r=>String(r.raw[k]||'').toLowerCase().includes(v.toLowerCase()));});
+  if(st.search){const s=st.search.toLowerCase();data=data.filter(r=>Object.values(r.raw).some(v=>String(v||'').toLowerCase().includes(s)));}
+  if(st.sort){data.sort((a,b)=>{const av=String(a.raw[st.sort]||''),bv=String(b.raw[st.sort]||'');return st.sortDir==='asc'?av.localeCompare(bv,undefined,{numeric:true}):bv.localeCompare(av,undefined,{numeric:true});});}
+  const visCols=cols.filter(c=>st.visibleCols.includes(c.k));
+
+  // Toolbar HTML
+  const toolbar=`<div class="notion-toolbar">
+    <div class="ndb-vbtns">
+      <button class="ndb-vbtn${st.view==='table'?' on':''}" onclick="ndbView('${vk}','table')">☰ Tabulka</button>
+      <button class="ndb-vbtn${st.view==='gallery'?' on':''}" onclick="ndbView('${vk}','gallery')">⊞ Galerie</button>
+      <button class="ndb-vbtn${st.view==='kanban'?' on':''}" onclick="ndbView('${vk}','kanban')">☷ Kanban</button>
+    </div>
+    <div class="ndb-sep"></div>
+    <button class="ndb-btn${Object.values(st.filters).some(v=>v)?' active':''}" onclick="ndbToggle('${vk}','Filters')">⚙ Filtrovat${Object.values(st.filters).filter(v=>v).length?' ('+Object.values(st.filters).filter(v=>v).length+')':''}</button>
+    <button class="ndb-btn" onclick="ndbToggle('${vk}','Props')">⊞ Vlastnosti</button>
+    <input class="fi" placeholder="🔍 Hledat…" value="${st.search}" oninput="ndbSearch('${vk}',this.value)" style="width:180px;padding:5px 10px;font-size:12px">
+    <div class="ndb-sep"></div>
+    <button class="ndb-btn" onclick="ndbExport('${vk}','csv')">↓ CSV</button>
+    <button class="ndb-btn" onclick="ndbExport('${vk}','json')">↓ JSON</button>
+    <span class="ndb-count">${data.length} / ${rows.length} záznamů</span>
+  </div>
+  <div class="filter-panel${st.showFilters?' open':''}" id="fp-${vk}">
+    ${filters.map(f=>`<div class="filter-chip">
+      <span style="font-size:11px;color:var(--text2)">${f.l}:</span>
+      <select class="fi-mini" onchange="ndbFilter('${vk}','${f.k}',this.value)">
+        <option value="">vše</option>${f.opts.map(o=>`<option value="${o}"${(st.filters[f.k]||'')==o?' selected':''}>${o}</option>`).join('')}
+      </select>
+    </div>`).join('')}
+    ${Object.values(st.filters).some(v=>v)?`<button class="btn btn-del btn-sm" onclick="ndbClearFilters('${vk}')">✕ Vymazat filtry</button>`:''}
+  </div>
+  <div class="prop-panel${st.showProps?' open':''}" id="pp-${vk}">
+    ${cols.map(c=>`<div class="prop-chip${st.visibleCols.includes(c.k)?' on':''}" onclick="ndbToggleCol('${vk}','${c.k}',this)">${c.icon||'#'} ${c.l}</div>`).join('')}
+  </div>`;
+
+  // Body
+  let body='';
+  if(st.view==='table'){
+    const ths=visCols.map(c=>`<th><div class="th-inner" onclick="ndbSort('${vk}','${c.k}')">${c.icon?`<span>${c.icon}</span>`:''}${c.l}<span class="sort-arr${st.sort===c.k?' on':''}">${st.sort===c.k?(st.sortDir==='asc'?'↑':'↓'):'⇅'}</span></div></th>`).join('');
+    const trs=data.length?data.map(r=>`<tr>${visCols.map(c=>`<td>${r.cells[c.k]||'—'}</td>`).join('')}<td class="td-acts">${r.acts||''}</td></tr>`).join(''):eRow(visCols.length+1,'Žádné záznamy','');
+    body=`<div class="notion-table-wrap"><table class="notion-table"><thead><tr>${ths}<th>Akce</th></tr></thead><tbody>${trs}</tbody></table></div>`;
+  } else if(st.view==='gallery'){
+    const cards=data.length?data.map(r=>`<div class="g-card">
+      <div class="g-card-hdr">${r.icon||'📄'}</div>
+      <div class="g-card-body"><div class="g-card-title">${r.title||'—'}</div>
+      <div>${(r.gprops||[]).map(p=>`<div class="g-prop"><span class="g-prop-l">${p.l}</span><span class="g-prop-v">${p.v}</span></div>`).join('')}</div>
+      <div class="td-acts" style="margin-top:8px">${r.acts||''}</div>
+      </div></div>`).join(''):`<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text2)">Žádné záznamy</div>`;
+    body=`<div class="gallery-grid">${cards}</div>`;
+  } else {
+    const grpKey=data[0]?.kgrp||'status';
+    const groups=[...new Set(rows.map(r=>String(r.raw[grpKey]||'—')))];
+    const cols2=groups.map(g=>`<div class="k-col"><div class="k-col-hdr"><span>${bdg(g)}</span><span class="k-cnt">${data.filter(r=>String(r.raw[grpKey]||'—')===g).length}</span></div>
+      ${data.filter(r=>String(r.raw[grpKey]||'—')===g).map(r=>`<div class="k-card"><div class="k-card-title">${r.title}</div><div class="k-card-meta">${r.kmeta||''}</div></div>`).join('')}
+    </div>`).join('');
+    body=`<div class="kanban-wrap">${cols2}</div>`;
+  }
+
+  el.innerHTML=toolbar+body;
+}
+
+function ndbView(vk,v){if(ndbState[vk])ndbState[vk].view=v;refreshAll();}
+function ndbSort(vk,col){const s=ndbState[vk];if(!s)return;if(s.sort===col)s.sortDir=s.sortDir==='asc'?'desc':'asc';else{s.sort=col;s.sortDir='asc';}refreshAll();}
+function ndbSearch(vk,v){if(ndbState[vk])ndbState[vk].search=v;refreshAll();}
+function ndbFilter(vk,k,v){if(ndbState[vk])ndbState[vk].filters[k]=v;refreshAll();}
+function ndbClearFilters(vk){if(ndbState[vk])ndbState[vk].filters={};refreshAll();}
+function ndbToggle(vk,what){const s=ndbState[vk];if(!s)return;s['show'+what]=!s['show'+what];refreshAll();}
+function ndbToggleCol(vk,col,el){
+  const s=ndbState[vk];if(!s)return;
+  const idx=s.visibleCols.indexOf(col);
+  if(idx>=0){if(s.visibleCols.length>1)s.visibleCols.splice(idx,1);}else s.visibleCols.push(col);
+  el.classList.toggle('on',s.visibleCols.includes(col));
+  refreshAll();
+}
+function ndbExport(vk,fmt2){
+  let data=[],hdr=[];
+  if(vk==='properties'){data=getVProps();hdr=['name','addr','type','area','rent','status'];}
+  else if(vk==='tenants'){data=DB.tenants;hdr=['fn','ln','email','phone','emp','inc'];}
+  else if(vk==='contracts'){data=getVContracts();hdr=['tid','pid','from','to','rent','dep','status'];}
+  else if(vk==='payments'){data=getVPayments();hdr=['cid','month','amt','due','paid','status'];}
+  else if(vk==='expenses'){data=getVExpenses();hdr=['desc','pid','cat','amt','date'];}
+  if(fmt2==='csv'){
+    const csv=[hdr.join(','),...data.map(r=>hdr.map(h=>JSON.stringify(r[h]||'')).join(','))].join('\n');
+    dl('data:text/csv;charset=utf-8,'+encodeURIComponent(csv),vk+'.csv');
+  } else {
+    dl('data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(data,null,2)),vk+'.json');
+  }
+}
+function dl(href,name){const a=document.createElement('a');a.href=href;a.download=name;a.click();}
+
+/* ═══ REFRESH ════════════════════════════ */
+function refreshPage(tabId){
+  const tab=tabs.find(t=>t.id===tabId);if(!tab||tab.key==='home')return;
+  const el=document.getElementById('view-'+tab.key);if(!el)return;
+  const fns={dashboard:renderDash,properties:renderProps,tenants:renderTens,contracts:renderCons,payments:renderPays,expenses:renderExps,portfolios:renderPortfolios,users:renderUsers,settings:renderSettings};
+  if(fns[tab.key])fns[tab.key](el);
+  renderSbStats(tab.key);
+}
+function refreshAll(){tabs.forEach(t=>refreshPage(t.id));}
+function renderSbStats(key){
+  const o=document.getElementById('sbocc-'+key),i=document.getElementById('sbinc-'+key),d=document.getElementById('sbdue-'+key);
+  if(!o)return;
+  const vp=getVProps();const ocd=vp.filter(p=>p.status==='obsazená').length;
+  o.textContent=vp.length?Math.round(ocd/vp.length*100)+'%':'—';
+  i.textContent=fmt(getVContracts().filter(c=>c.status==='aktivní').reduce((s,c)=>s+c.rent,0));
+  d.textContent=getVPayments().filter(p=>p.status==='po splatnosti').length||'0';
+}
+
+/* ═══ RENDERERS ══════════════════════════ */
+function renderDash(el){
+  const vp=getVProps(),vc=getVContracts(),vpy=getVPayments();
+  const occ=vp.filter(p=>p.status==='obsazená').length;
+  const income=vc.filter(c=>c.status==='aktivní').reduce((s,c)=>s+c.rent,0);
+  const overdueN=vpy.filter(p=>p.status==='po splatnosti').length;
+  const activeTen=new Set(vc.filter(c=>c.status==='aktivní').map(c=>c.tid)).size;
+  const alerts=[];
+  vpy.filter(p=>p.status==='po splatnosti').forEach(p=>{const c=DB.contracts.find(x=>x.id===p.cid);if(c)alerts.push(`Platba po splatnosti: <strong>${pn(c.pid)}</strong> — ${tn(c.tid)} (${fmt(p.amt)})`);});
+  const soon=new Date();soon.setDate(soon.getDate()+60);
+  vc.filter(c=>c.status==='aktivní'&&c.to&&new Date(c.to)<=soon).forEach(c=>alerts.push(`Smlouva vyprší <strong>${c.to}</strong>: ${pn(c.pid)} — ${tn(c.tid)}`));
+  const payRows=[...vpy].sort((a,b)=>b.due.localeCompare(a.due)).slice(0,10).map(p=>{
+    const c=DB.contracts.find(x=>x.id===p.cid);
+    return `<tr>
+      <td>${c?`<span class="chip" onclick="openTab('properties')">${pn(c.pid)}</span>`:'—'}</td>
+      <td>${c?`<span class="chip" onclick="openTab('tenants')">${tn(c.tid)}</span>`:'—'}</td>
+      <td>${fmt(p.amt)}</td><td>${p.due}</td><td>${bdg(p.status)}</td>
+      <td>${p.status!=='zaplaceno'?`<button class="btn btn-gold btn-sm" onclick="markPaid('${p.id}')">✓ Uhrazeno</button>`:'—'}</td></tr>`;
+  }).join('');
+  el.innerHTML=`<div style="padding:22px">
+    <div class="sc-grid sc4">
+      <div class="scard sc-gold"><div class="sc-lbl">Nemovitosti</div><div class="sc-val">${vp.length}</div><div class="sc-sub">${occ} obsazených z ${vp.length}</div></div>
+      <div class="scard sc-green"><div class="sc-lbl">Příjem / měsíc</div><div class="sc-val">${fmt(income)}</div><div class="sc-sub">celkový nájem</div></div>
+      <div class="scard sc-red"><div class="sc-lbl">Po splatnosti</div><div class="sc-val">${overdueN}</div><div class="sc-sub">${overdueN?'plateb čeká':'vše v pořádku ✓'}</div></div>
+      <div class="scard sc-blue"><div class="sc-lbl">Aktivní nájemníci</div><div class="sc-val">${activeTen}</div><div class="sc-sub">z ${DB.tenants.length} celkem</div></div>
+    </div>
+    ${alerts.map(a=>`<div class="alrt">⚠️ ${a}</div>`).join('')}
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-family:'Playfair Display',serif;font-size:16px">Přehled plateb</div>
+      <button class="btn btn-out btn-sm" onclick="openTab('payments')">Zobrazit vše →</button>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+      <table class="notion-table"><thead><tr><th>Nemovitost</th><th>Nájemník</th><th>Částka</th><th>Splatnost</th><th>Stav</th><th>Akce</th></tr></thead>
+      <tbody>${payRows||eRow(6,'Žádné platby','')}</tbody></table></div></div>`;
+}
+
+function renderProps(el){
+  const vp=getVProps();
+  const cols=[{k:'name',l:'Nemovitost',icon:'🏢'},{k:'type',l:'Typ',icon:'🏷'},{k:'area',l:'Plocha',icon:'📐'},{k:'rent',l:'Nájem',icon:'💰'},{k:'status',l:'Stav',icon:'🔵'},{k:'portfolio',l:'Portfolio',icon:'📂'},{k:'tenant',l:'Nájemník',icon:'👤'}];
+  if(!ndbState['properties'])ndbState['properties']={view:'table',filters:{},visibleCols:cols.map(c=>c.k),sort:null,sortDir:'asc',search:'',showFilters:false,showProps:false};
+  const rows=vp.map(p=>{
+    const c=DB.contracts.find(x=>x.pid===p.id&&x.status==='aktivní');
+    const ten=c?DB.tenants.find(t=>t.id===c.tid):null;
+    return {raw:{...p,portfolio:portName(p.portfolioId),tenant:ten?ten.fn+' '+ten.ln:'',area:String(p.area),rent:String(p.rent)},
+      icon:'🏢',title:p.name,kgrp:'status',kmeta:fmt(p.rent),
+      cells:{name:`<strong>${p.name}</strong><br><small style="color:var(--text2)">${p.addr}</small>`,
+        type:`<span class="badge bg-b">${p.type}</span>`,area:p.area+' m²',rent:fmt(p.rent),status:bdg(p.status),
+        portfolio:portBadge(p.portfolioId)||'—',
+        tenant:ten?`<span class="chip" onclick="openTab('tenants')">${ten.fn} ${ten.ln}</span>`:'<span class="badge bg-x">volná</span>'},
+      gprops:[{l:'Typ',v:p.type},{l:'Plocha',v:p.area+'m²'},{l:'Nájem',v:fmt(p.rent)},{l:'Portfolio',v:portName(p.portfolioId)}],
+      acts:`<button class="btn btn-out btn-sm btn-ico" onclick="openDocDB('${p.id}')" title="Dokumenty">📁</button>
+            <button class="btn btn-out btn-sm btn-ico" onclick="editProp('${p.id}')">✏️</button>
+            <button class="btn btn-del btn-sm btn-ico" onclick="delIt('properties','${p.id}')">🗑</button>`};
+  });
+  notionDB(el,{vk:'properties',cols,rows,filters:[
+    {k:'status',l:'Stav',opts:['obsazená','volná','rekonstrukce']},
+    {k:'type',l:'Typ',opts:['Byt','Dům','Kancelář','Sklad','Garáž']},
+    {k:'portfolio',l:'Portfolio',opts:DB.portfolios.map(p=>p.name)},
+  ]});
+}
+
+function renderTens(el){
+  const cols=[{k:'name',l:'Jméno',icon:'👤'},{k:'email',l:'Email',icon:'✉'},{k:'phone',l:'Telefon',icon:'📞'},{k:'prop',l:'Nemovitost',icon:'🏢'},{k:'contractTo',l:'Smlouva do',icon:'📅'},{k:'status',l:'Stav',icon:'🔵'},{k:'inc',l:'Příjem',icon:'💶'}];
+  if(!ndbState['tenants'])ndbState['tenants']={view:'table',filters:{},visibleCols:cols.map(c=>c.k),sort:null,sortDir:'asc',search:'',showFilters:false,showProps:false};
+  const rows=DB.tenants.map(t=>{
+    const c=DB.contracts.find(x=>x.tid===t.id&&x.status==='aktivní');
+    const p=c?DB.properties.find(x=>x.id===c.pid):null;
+    const status=c?'aktivní':'bez smlouvy';
+    return {raw:{...t,name:t.fn+' '+t.ln,prop:p?p.name:'',contractTo:c?c.to:'',status,inc:String(t.inc)},
+      icon:'👤',title:t.fn+' '+t.ln,kgrp:'status',kmeta:t.email,
+      cells:{name:`<strong>${t.fn} ${t.ln}</strong>`,email:t.email?`<a href="mailto:${t.email}" style="color:var(--gold);text-decoration:none">${t.email}</a>`:'—',
+        phone:t.phone||'—',
+        prop:p?`<span class="chip" onclick="openTab('properties')">${p.name}</span>`:'<span class="badge bg-x">bez smlouvy</span>',
+        contractTo:c?c.to:'—',status:bdg(status),inc:t.inc?fmt(t.inc):'—'},
+      gprops:[{l:'Email',v:t.email||'—'},{l:'Tel.',v:t.phone||'—'},{l:'Zaměstnavatel',v:t.emp||'—'}],
+      acts:`<button class="btn btn-out btn-sm" onclick="openPredpis('${t.id}')" title="Předpis">📋</button>
+            <button class="btn btn-out btn-sm btn-ico" onclick="editTenant('${t.id}')">✏️</button>
+            <button class="btn btn-del btn-sm btn-ico" onclick="delIt('tenants','${t.id}')">🗑</button>`};
+  });
+  notionDB(el,{vk:'tenants',cols,rows,filters:[{k:'status',l:'Stav',opts:['aktivní','bez smlouvy']}]});
+}
+
+function renderCons(el){
+  const vc=getVContracts();
+  const cols=[{k:'tenant',l:'Nájemník',icon:'👤'},{k:'prop',l:'Nemovitost',icon:'🏢'},{k:'from',l:'Od',icon:'📅'},{k:'to',l:'Do',icon:'📅'},{k:'rent',l:'Nájem',icon:'💰'},{k:'dep',l:'Kauce',icon:'🏦'},{k:'status',l:'Stav',icon:'🔵'}];
+  if(!ndbState['contracts'])ndbState['contracts']={view:'table',filters:{},visibleCols:cols.map(c=>c.k),sort:null,sortDir:'asc',search:'',showFilters:false,showProps:false};
+  const rows=vc.map(c=>{
+    const dL=c.to?Math.round((new Date(c.to)-new Date())/86400000):null;
+    const soon=dL!==null&&dL<60&&dL>0;
+    return {raw:{...c,tenant:tn(c.tid),prop:pn(c.pid),rent:String(c.rent),dep:String(c.dep)},
+      icon:'📄',title:pn(c.pid)+' / '+tn(c.tid),kgrp:'status',kmeta:fmt(c.rent)+'/měs.',
+      cells:{tenant:`<span class="chip" onclick="openTab('tenants')">${tn(c.tid)}</span>`,
+        prop:`<span class="chip" onclick="openTab('properties')">${pn(c.pid)}</span>`,
+        from:c.from,to:c.to+(soon?` <span class="badge bg-w" style="font-size:9px">za ${dL}d</span>`:''),
+        rent:fmt(c.rent),dep:fmt(c.dep),status:bdg(c.status)},
+      gprops:[{l:'Nájem',v:fmt(c.rent)},{l:'Kauce',v:fmt(c.dep)},{l:'Splatnost',v:c.day+'. v měsíci'}],
+      acts:`<button class="btn btn-out btn-sm btn-ico" onclick="editContract('${c.id}')">✏️</button>
+            <button class="btn btn-del btn-sm btn-ico" onclick="delIt('contracts','${c.id}')">🗑</button>`};
+  });
+  notionDB(el,{vk:'contracts',cols,rows,filters:[{k:'status',l:'Stav',opts:['aktivní','příprava','ukončená']}]});
+}
+
+function renderPays(el){
+  const vpy=getVPayments();
+  const cols=[{k:'prop',l:'Nemovitost',icon:'🏢'},{k:'tenant',l:'Nájemník',icon:'👤'},{k:'month',l:'Měsíc',icon:'📅'},{k:'amt',l:'Částka',icon:'💰'},{k:'due',l:'Splatnost',icon:'⏰'},{k:'paid',l:'Uhrazeno',icon:'✓'},{k:'status',l:'Stav',icon:'🔵'}];
+  if(!ndbState['payments'])ndbState['payments']={view:'table',filters:{},visibleCols:cols.map(c=>c.k),sort:null,sortDir:'asc',search:'',showFilters:false,showProps:false};
+  const paid2=vpy.reduce((s,p)=>s+(p.status==='zaplaceno'?p.amt:0),0);
+  const pend=vpy.filter(p=>p.status!=='zaplaceno').reduce((s,p)=>s+p.amt,0);
+  const rows=[...vpy].sort((a,b)=>b.due.localeCompare(a.due)).map(p=>{
+    const c=DB.contracts.find(x=>x.id===p.cid);
+    return {raw:{...p,prop:c?pn(c.pid):'',tenant:c?tn(c.tid):'',amt:String(p.amt)},
+      icon:'💰',title:c?pn(c.pid)+' '+p.month:'—',kgrp:'status',kmeta:fmt(p.amt),
+      cells:{prop:c?`<span class="chip" onclick="openTab('properties')">${pn(c.pid)}</span>`:'—',
+        tenant:c?`<span class="chip" onclick="openTab('tenants')">${tn(c.tid)}</span>`:'—',
+        month:p.month,amt:fmt(p.amt),due:p.due,paid:p.paid||'—',status:bdg(p.status)},
+      gprops:[{l:'Měsíc',v:p.month},{l:'Částka',v:fmt(p.amt)},{l:'Stav',v:p.status}],
+      acts:`${p.status!=='zaplaceno'?`<button class="btn btn-gold btn-sm" onclick="markPaid('${p.id}')">✓</button>`:''}
+            <button class="btn btn-out btn-sm btn-ico" onclick="editPayment('${p.id}')">✏️</button>
+            <button class="btn btn-del btn-sm btn-ico" onclick="delIt('payments','${p.id}')">🗑</button>`};
+  });
+  const sub=document.createElement('div');sub.style.cssText='display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0';
+  el.innerHTML=`<div style="padding:10px 22px"><div class="sc-grid sc3" style="margin:0"><div class="scard sc-green"><div class="sc-lbl">Uhrazeno</div><div class="sc-val">${fmt(paid2)}</div></div><div class="scard sc-blue"><div class="sc-lbl">Čeká na úhradu</div><div class="sc-val">${fmt(pend)}</div></div><div class="scard sc-red"><div class="sc-lbl">Po splatnosti</div><div class="sc-val">${vpy.filter(p=>p.status==='po splatnosti').length}</div></div></div></div>`;
+  el.appendChild(sub);
+  notionDB(sub,{vk:'payments',cols,rows,filters:[{k:'status',l:'Stav',opts:['zaplaceno','čeká','po splatnosti']}]});
+}
+
+function renderExps(el){
+  const ve=getVExpenses();
+  const cols=[{k:'desc',l:'Popis',icon:'📝'},{k:'prop',l:'Nemovitost',icon:'🏢'},{k:'cat',l:'Kategorie',icon:'🏷'},{k:'amt',l:'Částka',icon:'💰'},{k:'date',l:'Datum',icon:'📅'}];
+  if(!ndbState['expenses'])ndbState['expenses']={view:'table',filters:{},visibleCols:cols.map(c=>c.k),sort:null,sortDir:'asc',search:'',showFilters:false,showProps:false};
+  const totalAll=ve.reduce((s,e)=>s+e.amt,0);
+  const yr=new Date().getFullYear().toString();
+  const yrT=ve.filter(e=>e.date&&e.date.startsWith(yr)).reduce((s,e)=>s+e.amt,0);
+  const rows=[...ve].sort((a,b)=>b.date.localeCompare(a.date)).map(e=>({
+    raw:{...e,prop:pn(e.pid),amt:String(e.amt)},icon:'🔧',title:e.desc,kgrp:'cat',kmeta:fmt(e.amt),
+    cells:{desc:`<strong>${e.desc}</strong>`,prop:e.pid?`<span class="chip" onclick="openTab('properties')">${pn(e.pid)}</span>`:'—',cat:`<span class="badge bg-b">${e.cat}</span>`,amt:fmt(e.amt),date:e.date},
+    gprops:[{l:'Kategorie',v:e.cat},{l:'Částka',v:fmt(e.amt)},{l:'Datum',v:e.date}],
+    acts:`<button class="btn btn-del btn-sm btn-ico" onclick="delIt('expenses','${e.id}')">🗑</button>`}));
+  const sub=document.createElement('div');sub.style.cssText='display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0';
+  el.innerHTML=`<div style="padding:10px 22px"><div class="sc-grid sc3" style="margin:0"><div class="scard sc-red"><div class="sc-lbl">Výdaje celkem</div><div class="sc-val">${fmt(totalAll)}</div></div><div class="scard sc-blue"><div class="sc-lbl">Letošní rok</div><div class="sc-val">${fmt(yrT)}</div></div><div class="scard sc-green"><div class="sc-lbl">Příjem aktivní</div><div class="sc-val">${fmt(getVContracts().filter(c=>c.status==='aktivní').reduce((s,c)=>s+c.rent,0))}</div></div></div></div>`;
+  el.appendChild(sub);
+  notionDB(sub,{vk:'expenses',cols,rows,filters:[{k:'cat',l:'Kategorie',opts:['Opravy a údržba','Pojištění','Daně a poplatky','Správa','Energie','Vybavení','Jiné']}]});
+}
+
+function renderPortfolios(el){
+  el.innerHTML=`<div style="padding:22px">
+    <div style="font-size:13px;color:var(--text2);margin-bottom:18px">Portfolia seskupují nemovitosti pod jednoho vlastníka. Filtr portfolia je dostupný v levém panelu.</div>
+    ${DB.portfolios.map(pt=>{
+      const cnt=DB.properties.filter(p=>p.portfolioId===pt.id).length;
+      const inc=DB.contracts.filter(c=>c.status==='aktivní'&&DB.properties.find(p=>p.id===c.pid&&p.portfolioId===pt.id)).reduce((s,c)=>s+c.rent,0);
+      return `<div class="port-card">
+        <div style="width:36px;height:36px;border-radius:50%;background:${pt.color};flex-shrink:0"></div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--text)">${pt.name}</div>
+          <div style="font-size:12px;color:var(--text2)">Vlastník: ${pt.owner||'—'}${pt.ico?' · IČO: '+pt.ico:''}</div></div>
+        <div style="text-align:right"><div style="font-size:13px;color:var(--text)">${cnt} nemovitostí</div><div style="font-size:12px;color:var(--text2)">${fmt(inc)}/měs.</div></div>
+        <div class="td-acts">
+          <button class="btn btn-out btn-sm btn-ico" onclick="editPortfolio('${pt.id}')">✏️</button>
+          <button class="btn btn-del btn-sm btn-ico" onclick="delIt('portfolios','${pt.id}')">🗑</button>
+        </div>
+      </div>`;}).join('')||'<div class="empty"><div class="empty-ico">📂</div><h3>Žádná portfolia</h3><p>Přidejte první portfolio</p></div>'}
+  </div>`;
+}
+
+function renderUsers(el){
+  if(!canDo('users')){el.innerHTML='<div class="empty"><div class="empty-ico">🔒</div><h3>Přístup odepřen</h3><p>Nemáte oprávnění spravovat uživatele</p></div>';return;}
+  const users=getUsers();
+  const roleMap={admin:'role-admin',manager:'role-manager',owner:'role-owner',viewer:'role-viewer'};
+  const roleLbl={admin:'Admin',manager:'Správce',owner:'Vlastník',viewer:'Čtenář'};
+  el.innerHTML=`<div style="padding:22px">
+    <div style="font-size:13px;color:var(--text2);margin-bottom:18px">Spravujte přístupy uživatelů. Každý uživatel má login a heslo pro přihlášení.</div>
+    ${users.map(u=>`<div class="usr-card">
+      <div class="usr-av-lg" style="background:${u.color||'#c9a84c'}">${(u.name||'U')[0].toUpperCase()}</div>
+      <div class="usr-info"><div class="usr-name-lg">${u.name}</div><div class="usr-email">${u.email}</div>
+        ${u.portfolios&&u.portfolios.length?`<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">${u.portfolios.map(pid=>portBadge(pid)).join('')}</div>`:''}
+      </div>
+      <span class="usr-role ${roleMap[u.role]||'role-viewer'}">${roleLbl[u.role]||u.role}</span>
+      <div class="td-acts">
+        <button class="btn btn-out btn-sm btn-ico" onclick="editUser('${u.id}')">✏️</button>
+        ${u.id!=='u1'?`<button class="btn btn-del btn-sm btn-ico" onclick="delUser('${u.id}')">🗑</button>`:''}
+      </div>
+    </div>`).join('')}
+    <div style="margin-top:22px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:12px">Role — přehled</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;font-size:12px">
+        <div><span class="usr-role role-admin">Admin</span><div style="color:var(--text2);margin-top:6px;line-height:1.5">Plný přístup, správa uživatelů</div></div>
+        <div><span class="usr-role role-manager">Správce</span><div style="color:var(--text2);margin-top:6px;line-height:1.5">Správa dat bez systémových funkcí</div></div>
+        <div><span class="usr-role role-owner">Vlastník</span><div style="color:var(--text2);margin-top:6px;line-height:1.5">Přístup jen k přiřazeným portfoliím</div></div>
+        <div><span class="usr-role role-viewer">Čtenář</span><div style="color:var(--text2);margin-top:6px;line-height:1.5">Pouze prohlížení přidělených dat</div></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderSettings(el){
+  el.innerHTML=`<div style="padding:22px">
+    <div style="font-family:'Playfair Display',serif;font-size:20px;margin-bottom:20px;color:var(--text)">Nastavení</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
+      <h3 style="font-family:'Playfair Display',serif;font-size:15px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">Data a zálohy</h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-out" onclick="if(confirm('Smazat veškerá data?')){localStorage.removeItem('rm_db2');loadDB();refreshAll();alert('Hotovo.');}">🗑 Smazat data</button>
+        <button class="btn btn-out" onclick="const a=document.createElement('a');a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(DB,null,2));a.download='rentmaster-backup.json';a.click()">↓ Exportovat zálohu</button>
+        <button class="btn btn-gold" onclick="document.getElementById('import-f').click()">↑ Importovat zálohu</button>
+        <input type="file" id="import-f" accept=".json" style="display:none" onchange="(function(e){const r=new FileReader();r.onload=ev=>{try{DB=JSON.parse(ev.target.result);saveDB();refreshAll();alert('Importováno!');}catch(x){alert('Chyba.');}};r.readAsText(e.target.files[0]);e.target.value='';})(event)">
+      </div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px">
+      <h3 style="font-family:'Playfair Display',serif;font-size:15px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">O aplikaci</h3>
+      <div style="font-size:13px;color:var(--text2);line-height:1.9">
+        <div>RentMaster v3.0 — správa pronájmů</div>
+        <div>Přihlášen: <strong style="color:var(--text)">${currentUser?.name}</strong> (${currentUser?.role})</div>
+        <div>Nemovitosti: ${DB.properties.length} · Nájemníci: ${DB.tenants.length} · Smlouvy: ${DB.contracts.length} · Platby: ${DB.payments.length}</div>
+        <div>Dokumenty: ${DB.documents.length} · Předpisy: ${DB.predpisy.length} · Portfolia: ${DB.portfolios.length}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ═══ CRUD SAVE / EDIT ════════════════════ */
+function markPaid(id){const p=DB.payments.find(x=>x.id===id);if(!p)return;p.status='zaplaceno';p.paid=new Date().toISOString().slice(0,10);saveDB();refreshAll();}
+function delIt(key,id){if(!confirm('Smazat?'))return;DB[key]=DB[key].filter(x=>x.id!==id);saveDB();refreshAll();}
+function delUser(id){if(id===currentUser?.id){alert('Nelze smazat přihlášeného uživatele.');return;}if(!confirm('Smazat uživatele?'))return;saveUsers(getUsers().filter(x=>x.id!==id));refreshAll();}
+
+function openM(id){
+  editId=null;fillSelects();
+  const today=new Date().toISOString().slice(0,10);
+  ['mpa-due','me-date','mc-from'].forEach(k=>{const e=document.getElementById(k);if(e)e.value=today;});
+  const me=document.getElementById('mpa-month');if(me)me.value=new Date().toISOString().slice(0,7);
+  document.getElementById(id).classList.add('open');
+}
+function closeM(id){document.getElementById(id).classList.remove('open');clearForms();editId=null;}
+function clearForms(){
+  document.querySelectorAll('.modal input:not([type=checkbox]),.modal textarea').forEach(e=>e.value='');
+  document.querySelectorAll('.modal select').forEach(e=>{if(e.options.length)e.selectedIndex=0;});
+}
+function onRoleChange(){
+  const r=document.getElementById('mu-role')?.value;
+  const wp=document.getElementById('mu-port-wrap');
+  if(wp)wp.style.display=(r==='owner'||r==='manager')?'flex':'flex';
+}
+function fillSelects(){
+  const g=id=>document.getElementById(id);
+  const ts=g('mc-tenant');if(ts)ts.innerHTML=DB.tenants.map(t=>`<option value="${t.id}">${t.fn} ${t.ln}</option>`).join('');
+  const ps=g('mc-prop');if(ps)ps.innerHTML=DB.properties.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  const cs=g('mpa-c');if(cs)cs.innerHTML=DB.contracts.map(c=>`<option value="${c.id}">${pn(c.pid)} / ${tn(c.tid)}</option>`).join('');
+  const ep=g('me-prop');if(ep)ep.innerHTML='<option value="">— bez nemovitosti —</option>'+DB.properties.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  const mpp=g('mp-portfolio');if(mpp)mpp.innerHTML='<option value="">— bez portfolia —</option>'+DB.portfolios.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  const mup=g('mu-portfolio');if(mup)mup.innerHTML='<option value="">— všechna —</option>'+DB.portfolios.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  buildPermGrid();
+}
+function buildPermGrid(){
+  const el=document.getElementById('perm-grid');if(!el)return;
+  const perms=[{k:'properties',l:'Nemovitosti',s:'Přidávat/upravovat'},{k:'tenants',l:'Nájemníci',s:'Správa nájemníků'},{k:'contracts',l:'Smlouvy',s:'Správa smluv'},{k:'payments',l:'Platby',s:'Správa plateb'},{k:'expenses',l:'Výdaje',s:'Správa výdajů'},{k:'documents',l:'Dokumenty',s:'Nahrávání souborů'},{k:'predpisy',l:'Předpisy',s:'Generování předpisů'},{k:'users',l:'Uživatelé',s:'Správa přístupů'}];
+  el.innerHTML=perms.map(p=>`<div class="perm-row"><div><div class="perm-lbl">${p.l}</div><div class="perm-sub">${p.s}</div></div><label class="toggle-sw"><input type="checkbox" id="perm-${p.k}" name="${p.k}"><div class="sw-track"></div><div class="sw-thumb"></div></label></div>`).join('');
+}
+function saveProp(){
+  const name=document.getElementById('mp-name').value.trim();if(!name){alert('Zadejte název');return;}
+  const old=editId?DB.properties.find(x=>x.id===editId):null;
+  const o={id:editId||uid(),name,addr:document.getElementById('mp-addr').value.trim(),type:document.getElementById('mp-type').value,area:+document.getElementById('mp-area').value||0,rent:+document.getElementById('mp-rent').value||0,status:document.getElementById('mp-status').value,portfolioId:document.getElementById('mp-portfolio').value||null,year:+document.getElementById('mp-year').value||null,note:document.getElementById('mp-note').value.trim()};
+  if(editId){if(old&&old.portfolioId!==o.portfolioId)auditLog(editId,'edit',`Portfolio: "${portName(old.portfolioId)}" → "${portName(o.portfolioId)}"`,JSON.stringify(old));const i=DB.properties.findIndex(x=>x.id===editId);DB.properties[i]=o;}
+  else DB.properties.push(o);
+  saveDB();closeM('m-prop');refreshAll();
+}
+function saveTenant(){
+  const fn=document.getElementById('mt-fn').value.trim(),ln=document.getElementById('mt-ln').value.trim();if(!fn||!ln){alert('Zadejte jméno a příjmení');return;}
+  const o={id:editId||uid(),fn,ln,email:document.getElementById('mt-email').value.trim(),phone:document.getElementById('mt-phone').value.trim(),dob:document.getElementById('mt-dob').value,idnum:document.getElementById('mt-id').value.trim(),addr:document.getElementById('mt-addr').value.trim(),emp:document.getElementById('mt-emp').value.trim(),inc:+document.getElementById('mt-inc').value||0,note:document.getElementById('mt-note').value.trim()};
+  if(editId){const i=DB.tenants.findIndex(x=>x.id===editId);DB.tenants[i]=o;}else DB.tenants.push(o);
+  saveDB();closeM('m-tenant');refreshAll();
+}
+function saveContract(){
+  const tid=document.getElementById('mc-tenant').value,pid=document.getElementById('mc-prop').value;if(!tid||!pid){alert('Vyberte nájemníka a nemovitost');return;}
+  const o={id:editId||uid(),tid,pid,from:document.getElementById('mc-from').value,to:document.getElementById('mc-to').value,rent:+document.getElementById('mc-rent').value||0,dep:+document.getElementById('mc-dep').value||0,day:+document.getElementById('mc-day').value||15,status:document.getElementById('mc-status').value,note:document.getElementById('mc-note').value.trim()};
+  if(editId){const i=DB.contracts.findIndex(x=>x.id===editId);DB.contracts[i]=o;}else{DB.contracts.push(o);const prop=DB.properties.find(p=>p.id===pid);if(prop&&o.status==='aktivní')prop.status='obsazená';}
+  saveDB();closeM('m-contract');refreshAll();
+}
+function savePayment(){
+  const cid=document.getElementById('mpa-c').value;if(!cid){alert('Vyberte smlouvu');return;}
+  const o={id:editId||uid(),cid,month:document.getElementById('mpa-month').value,amt:+document.getElementById('mpa-amt').value||0,due:document.getElementById('mpa-due').value,paid:document.getElementById('mpa-paid').value,status:document.getElementById('mpa-status').value,note:document.getElementById('mpa-note').value.trim()};
+  if(editId){const i=DB.payments.findIndex(x=>x.id===editId);DB.payments[i]=o;}else DB.payments.push(o);
+  saveDB();closeM('m-payment');refreshAll();
+}
+function saveExpense(){
+  const desc=document.getElementById('me-desc').value.trim();if(!desc){alert('Zadejte popis');return;}
+  const o={id:editId||uid(),desc,pid:document.getElementById('me-prop').value||null,cat:document.getElementById('me-cat').value,amt:+document.getElementById('me-amt').value||0,date:document.getElementById('me-date').value,note:document.getElementById('me-note').value.trim()};
+  if(editId){const i=DB.expenses.findIndex(x=>x.id===editId);DB.expenses[i]=o;}else DB.expenses.push(o);
+  saveDB();closeM('m-expense');refreshAll();
+}
+function saveUser(){
+  if(!canDo('users')){alert('Nemáte oprávnění');return;}
+  const name=document.getElementById('mu-name').value.trim();
+  const email=document.getElementById('mu-email').value.trim();
+  const pass=document.getElementById('mu-pass').value;
+  if(!name||!email){alert('Zadejte jméno a login');return;}
+  const role=document.getElementById('mu-role').value;
+  const portEl=document.getElementById('mu-portfolio');
+  const portfolios=Array.from(portEl.selectedOptions).map(o=>o.value).filter(Boolean);
+  const perms={};document.querySelectorAll('#perm-grid input[type=checkbox]').forEach(cb=>{perms[cb.name]=cb.checked;});
+  const users=getUsers();
+  if(editId){
+    const i=users.findIndex(x=>x.id===editId);if(i<0)return;
+    users[i]={...users[i],name,email,role,portfolios,perms,...(pass?{pass}:{})};
+    if(currentUser&&currentUser.id===editId)currentUser={...users[i]};
+  }else{
+    if(!pass||pass.length<4){alert('Heslo musí mít alespoň 4 znaky');return;}
+    const colors=['#c9a84c','#6b8cde','#4cc9a4','#e05c5c','#a45ce0','#e09a3c'];
+    users.push({id:uid(),name,email,pass,role,portfolios,perms,color:colors[users.length%colors.length]});
+  }
+  saveUsers(users);closeM('m-user');refreshAll();
+}
+function savePortfolio(){
+  const name=document.getElementById('mpt-name').value.trim();if(!name){alert('Zadejte název');return;}
+  const o={id:editId||uid(),name,owner:document.getElementById('mpt-owner').value.trim(),color:document.getElementById('mpt-color').value,ico:document.getElementById('mpt-ico').value.trim(),note:document.getElementById('mpt-note').value.trim()};
+  if(editId){const i=DB.portfolios.findIndex(x=>x.id===editId);DB.portfolios[i]=o;}else DB.portfolios.push(o);
+  saveDB();closeM('m-portfolio');refreshAll();
+}
+function editProp(id){
+  editId=id;const p=DB.properties.find(x=>x.id===id);
+  document.getElementById('mp-t').textContent='Upravit nemovitost';fillSelects();
+  const g=k=>document.getElementById(k);
+  g('mp-name').value=p.name;g('mp-addr').value=p.addr;g('mp-type').value=p.type;g('mp-area').value=p.area;g('mp-rent').value=p.rent;g('mp-status').value=p.status;g('mp-portfolio').value=p.portfolioId||'';g('mp-year').value=p.year||'';g('mp-note').value=p.note||'';
+  document.getElementById('m-prop').classList.add('open');
+}
+function editTenant(id){
+  editId=id;const t=DB.tenants.find(x=>x.id===id);
+  document.getElementById('mt-t').textContent='Upravit nájemníka';
+  const g=k=>document.getElementById(k);
+  g('mt-fn').value=t.fn;g('mt-ln').value=t.ln;g('mt-email').value=t.email||'';g('mt-phone').value=t.phone||'';g('mt-dob').value=t.dob||'';g('mt-id').value=t.idnum||'';g('mt-addr').value=t.addr||'';g('mt-emp').value=t.emp||'';g('mt-inc').value=t.inc||'';g('mt-note').value=t.note||'';
+  document.getElementById('m-tenant').classList.add('open');
+}
+function editContract(id){
+  editId=id;const c=DB.contracts.find(x=>x.id===id);fillSelects();
+  document.getElementById('mc-t').textContent='Upravit smlouvu';
+  const g=k=>document.getElementById(k);
+  g('mc-tenant').value=c.tid;g('mc-prop').value=c.pid;g('mc-from').value=c.from;g('mc-to').value=c.to;g('mc-rent').value=c.rent;g('mc-dep').value=c.dep;g('mc-day').value=c.day;g('mc-status').value=c.status;g('mc-note').value=c.note||'';
+  document.getElementById('m-contract').classList.add('open');
+}
+function editPayment(id){
+  editId=id;const p=DB.payments.find(x=>x.id===id);fillSelects();
+  document.getElementById('mpa-t').textContent='Upravit platbu';
+  const g=k=>document.getElementById(k);
+  g('mpa-c').value=p.cid;g('mpa-month').value=p.month;g('mpa-amt').value=p.amt;g('mpa-due').value=p.due;g('mpa-paid').value=p.paid||'';g('mpa-status').value=p.status;g('mpa-note').value=p.note||'';
+  document.getElementById('m-payment').classList.add('open');
+}
+function editUser(id){
+  editId=id;const users=getUsers();const u=users.find(x=>x.id===id);if(!u)return;
+  document.getElementById('mu-t').textContent='Upravit uživatele';fillSelects();
+  const g=k=>document.getElementById(k);
+  g('mu-name').value=u.name;g('mu-email').value=u.email;g('mu-role').value=u.role;g('mu-pass').value='';
+  const portEl=g('mu-portfolio');if(portEl)Array.from(portEl.options).forEach(o=>{o.selected=u.portfolios&&u.portfolios.includes(o.value);});
+  if(u.perms)Object.entries(u.perms).forEach(([k,v])=>{const cb=document.getElementById('perm-'+k);if(cb)cb.checked=v;});
+  document.getElementById('m-user').classList.add('open');
+}
+function editPortfolio(id){
+  editId=id;const p=DB.portfolios.find(x=>x.id===id);if(!p)return;
+  document.getElementById('mpt-t').textContent='Upravit portfolio';
+  const g=k=>document.getElementById(k);
+  g('mpt-name').value=p.name;g('mpt-owner').value=p.owner||'';g('mpt-color').value=p.color;g('mpt-ico').value=p.ico||'';g('mpt-note').value=p.note||'';
+  document.getElementById('m-portfolio').classList.add('open');
+}
+
+document.querySelectorAll('.mov').forEach(ov=>ov.addEventListener('click',e=>{if(e.target===ov){ov.classList.remove('open');clearForms();editId=null;}}));
+document.querySelectorAll('.cpov').forEach(ov=>ov.addEventListener('click',e=>{if(e.target===ov)ov.classList.remove('open');}));
+
+/* ═══ CENTER-PEAK ════════════════════════ */
+function openCP(id){document.getElementById(id).classList.add('open');}
+function closeCP(id){document.getElementById(id).classList.remove('open');}
+function cpTab(modal,panel,btn){
+  document.querySelectorAll(`[id^="cp-${modal}-"]`).forEach(p=>p.classList.remove('on'));
+  document.getElementById(`cp-${modal}-${panel}`)?.classList.add('on');
+  if(btn){btn.closest('.cp-tabs').querySelectorAll('.cptab').forEach(b=>b.classList.remove('on'));btn.classList.add('on');}
+}
+
+/* ═══ PŘEDPIS ════════════════════════════ */
+let PS={tid:null,cid:null,items:[],eid:null};
+function openPredpis(tid){
+  const t=DB.tenants.find(x=>x.id===tid);const c=DB.contracts.find(x=>x.tid===tid&&x.status==='aktivní');
+  PS={tid,cid:c?c.id:null,items:[],eid:null};
+  document.getElementById('predpis-title').textContent=`Předpis — ${t?t.fn+' '+t.ln:''}`;
+  document.getElementById('pr-rent').value=c?c.rent:'';
+  document.getElementById('pr-period').value=new Date().toISOString().slice(0,7);
+  document.getElementById('pr-due').value='';document.getElementById('pr-note').value='';
+  const ex=DB.predpisy.find(p=>p.tid===tid);
+  if(ex){PS.items=[...ex.items];PS.eid=ex.id;document.getElementById('pr-rent').value=ex.rent;}
+  renderZalohRows();calcPredpis();
+  cpTab('predpis','builder',document.querySelector('#cp-predpis .cptab'));
+  openCP('cp-predpis');
+}
+function renderZalohRows(){
+  document.getElementById('zaloh-rows').innerHTML=PS.items.map((z,i)=>`<div class="zaloh-row">
+    <input class="fi" value="${z.name}" onchange="PS.items[${i}].name=this.value;calcPredpis()">
+    <input class="fi" type="number" value="${z.amt}" style="text-align:right" onchange="PS.items[${i}].amt=+this.value;calcPredpis()">
+    <button class="btn btn-del btn-sm btn-ico" onclick="PS.items.splice(${i},1);renderZalohRows();calcPredpis()">✕</button>
+  </div>`).join('');
+}
+function addZaloh(){
+  const name=document.getElementById('z-name').value.trim();const amt=+document.getElementById('z-amt').value||0;
+  if(!name){alert('Zadejte název složky');return;}
+  PS.items.push({name,amt});document.getElementById('z-name').value='';document.getElementById('z-amt').value='';
+  renderZalohRows();calcPredpis();
+}
+function calcPredpis(){
+  const r=+document.getElementById('pr-rent').value||0;
+  document.getElementById('pr-total').textContent=fmt(r+PS.items.reduce((s,z)=>s+z.amt,0));
+}
+function buildPredpisPreview(){
+  const rent=+document.getElementById('pr-rent').value||0;const zT=PS.items.reduce((s,z)=>s+z.amt,0);
+  const t=DB.tenants.find(x=>x.id===PS.tid);const c=PS.cid?DB.contracts.find(x=>x.id===PS.cid):null;
+  const p=c?DB.properties.find(x=>x.id===c.pid):null;
+  const period=document.getElementById('pr-period').value;const due=document.getElementById('pr-due').value;const note=document.getElementById('pr-note').value;
+  document.getElementById('predpis-preview-content').innerHTML=`
+    <h3 style="font-family:'Playfair Display',serif;font-size:18px;color:var(--text);margin-bottom:14px">Předpis nájemného</h3>
+    <div style="margin-bottom:16px;font-size:12px;color:var(--text2);line-height:1.8">
+      <div><strong>Nájemník:</strong> ${t?t.fn+' '+t.ln:'—'}</div>
+      <div><strong>Nemovitost:</strong> ${p?p.name:'—'}</div>
+      <div><strong>Období:</strong> ${period||'—'}</div>
+      <div><strong>Splatnost:</strong> ${due||'—'}</div>
+      ${note?`<div><strong>Poznámka:</strong> ${note}</div>`:''}
+    </div>
+    <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
+      <div style="background:var(--card2);padding:8px 14px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text2);display:flex;justify-content:space-between"><span>Položka</span><span>Částka</span></div>
+      <div style="padding:0 14px">
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span>Nájemné</span><span>${fmt(rent)}</span></div>
+        ${PS.items.map(z=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span>Záloha — ${z.name}</span><span>${fmt(z.amt)}</span></div>`).join('')}
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:14px 0 0;margin-top:8px;border-top:2px solid var(--border)">
+      <span style="font-size:14px;font-weight:600;color:var(--text)">Celkem k úhradě</span>
+      <span style="font-family:'Playfair Display',serif;font-size:24px;color:var(--gold)">${fmt(rent+zT)}</span>
+    </div>`;
+  cpTab('predpis','preview',document.querySelectorAll('#cp-predpis .cptab')[1]);
+}
+function savePredpis(){
+  const rent=+document.getElementById('pr-rent').value||0;const zT=PS.items.reduce((s,z)=>s+z.amt,0);
+  const o={id:PS.eid||uid(),tid:PS.tid,cid:PS.cid,rent,items:[...PS.items],total:rent+zT,period:document.getElementById('pr-period').value,due:document.getElementById('pr-due').value,note:document.getElementById('pr-note').value,createdAt:new Date().toISOString()};
+  if(PS.eid){const i=DB.predpisy.findIndex(x=>x.id===PS.eid);DB.predpisy[i]=o;}else DB.predpisy.push(o);
+  saveDB();closeCP('cp-predpis');refreshAll();
+  const t=DB.tenants.find(x=>x.id===PS.tid);alert(`✅ Předpis uložen${t?' pro '+t.fn+' '+t.ln:''}. Celkem: ${fmt(o.total)}`);
+}
+
+/* ═══ DOCUMENTS ══════════════════════════ */
+let DS={propId:null};let pendFiles=[];let replId=null;
+function openDocDB(propId){
+  const p=DB.properties.find(x=>x.id===propId);DS.propId=propId;
+  document.getElementById('docs-title').textContent=`Dokumenty — ${p?p.name:''}`;
+  document.getElementById('doc-cat-f').value='';
+  renderDocs();renderAuditLog(propId);
+  cpTab('docs','list',document.querySelector('#cp-docs .cptab'));openCP('cp-docs');
+}
+function renderDocs(){
+  const f=document.getElementById('doc-cat-f').value;
+  let docs=DB.documents.filter(d=>d.pid===DS.propId);if(f)docs=docs.filter(d=>d.cat===f);
+  document.getElementById('doc-cnt-lbl').textContent=`${docs.length} dokumentů`;
+  const extIco=e=>{const m={pdf:'📄',doc:'📝',docx:'📝',xls:'📊',xlsx:'📊',jpg:'🖼',jpeg:'🖼',png:'🖼',zip:'📦',txt:'📃'};return m[(e||'').toLowerCase()]||'📎';};
+  const g=document.getElementById('doc-grid');
+  if(!docs.length){g.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--text2)"><div style="font-size:32px;margin-bottom:8px">📂</div>Žádné dokumenty</div>`;return;}
+  g.innerHTML=docs.map(d=>`<div class="doc-card">
+    <div class="doc-ver">v${d.ver||1}</div>
+    <div class="doc-ico">${extIco(d.ext)}</div>
+    <div class="doc-nm">${d.name}</div>
+    <div class="doc-meta">${d.cat}<br>${new Date(d.uploadedAt).toLocaleDateString('cs-CZ')}<br>${d.size||''}</div>
+    <div class="doc-acts">
+      <button class="btn btn-out btn-sm btn-ico" onclick="downloadDoc('${d.id}')" title="Stáhnout">⬇</button>
+      <button class="btn btn-out btn-sm btn-ico" onclick="replaceDocFn('${d.id}')" title="Nová verze">🔄</button>
+      <button class="btn btn-del btn-sm btn-ico" onclick="deleteDoc('${d.id}')" title="Smazat">🗑</button>
+    </div></div>`).join('');
+}
+function docDragOver(e){e.preventDefault();document.getElementById('doc-drop-zone').classList.add('drag');}
+function docDragLeave(){document.getElementById('doc-drop-zone').classList.remove('drag');}
+function docDrop(e){e.preventDefault();document.getElementById('doc-drop-zone').classList.remove('drag');const f=Array.from(e.dataTransfer.files);if(f.length)startDocUpload(f);}
+function docFilePicked(e){const f=Array.from(e.target.files);if(f.length)startDocUpload(f);e.target.value='';}
+function startDocUpload(files){pendFiles=files;replId=null;const f=files[0];document.getElementById('dcat-nm').value=f.name.replace(/\.[^.]+$/,'');openCP('cp-doc-cat');}
+function replaceDocFn(docId){
+  replId=docId;const di=document.getElementById('doc-file-in');
+  di.onchange=e=>{const f=Array.from(e.target.files);if(!f.length)return;pendFiles=f;const ex=DB.documents.find(x=>x.id===replId);document.getElementById('dcat-nm').value=ex?ex.name:f[0].name;document.getElementById('dcat-sel').value=ex?ex.cat:'Ostatní';openCP('cp-doc-cat');e.target.value='';di.onchange=docFilePicked;};di.click();
+}
+function confirmDocUpload(){
+  const name=document.getElementById('dcat-nm').value.trim();const cat=document.getElementById('dcat-sel').value;const note=document.getElementById('dcat-note').value.trim();
+  if(!name){alert('Zadejte název');return;}
+  const proc=f=>new Promise(res=>{const r=new FileReader();r.onload=ev=>{const ext=f.name.split('.').pop().toLowerCase();const size=f.size>1048576?(f.size/1048576).toFixed(1)+' MB':(f.size/1024).toFixed(0)+' KB';res({dataUrl:ev.target.result,ext,size});};r.readAsDataURL(f);});
+  Promise.all(pendFiles.map(proc)).then(results=>{
+    results.forEach((r,i)=>{
+      const f=pendFiles[i];const now=new Date().toISOString();
+      if(replId&&i===0){
+        const ex=DB.documents.find(x=>x.id===replId);if(ex){const snap=JSON.stringify(ex);const nv=(ex.ver||1)+1;Object.assign(ex,{name,cat,note,ext:r.ext,dataUrl:r.dataUrl,size:r.size,ver:nv,uploadedAt:now});auditLog(DS.propId,'replace',`Dokument "${name}" nahrazen (v${nv})`,snap);}
+      }else{
+        const nm=results.length>1?name+' '+(i+1):name;
+        DB.documents.push({id:uid(),pid:DS.propId,name:nm,cat,note,ext:r.ext,dataUrl:r.dataUrl,size:r.size,ver:1,uploadedAt:now});
+        auditLog(DS.propId,'upload',`Nahrán dokument "${nm}" (${cat})`,null);
+      }
+    });
+    saveDB();closeCP('cp-doc-cat');document.getElementById('dcat-note').value='';renderDocs();renderAuditLog(DS.propId);
+  });
+}
+function downloadDoc(docId){const d=DB.documents.find(x=>x.id===docId);if(!d||!d.dataUrl){alert('Soubor nelze stáhnout');return;}const a=document.createElement('a');a.href=d.dataUrl;a.download=d.name+'.'+d.ext;a.click();}
+function deleteDoc(docId){
+  const d=DB.documents.find(x=>x.id===docId);if(!d)return;
+  if(!confirm(`Smazat dokument "${d.name}"?`))return;
+  auditLog(DS.propId,'delete',`Dokument "${d.name}" (${d.cat}) smazán`,JSON.stringify(d));
+  DB.documents=DB.documents.filter(x=>x.id!==docId);
+  saveDB();renderDocs();renderAuditLog(DS.propId);
+}
+
+/* ═══ AUDIT LOG ══════════════════════════ */
+function auditLog(propId,action,detail,snapshot){
+  DB.auditLog.push({id:uid(),pid:propId,action,detail,snapshot,when:new Date().toISOString()});
+  saveDB();
+}
+function renderAuditLog(propId){
+  const logs=[...DB.auditLog].filter(l=>l.pid===propId).reverse();
+  const dotC={upload:'#6b8cde',replace:'#c9a84c',delete:'#e05c5c',edit:'#4cc9a4',revert:'#a45ce0'};
+  const ico={upload:'📤',replace:'🔄',delete:'🗑',edit:'✏️',revert:'↩️'};
+  const el=document.getElementById('audit-log-content');
+  if(!logs.length){el.innerHTML='<div class="empty"><div class="empty-ico">📋</div><h3>Žádné záznamy</h3><p>Auditní log se plní při změnách dokumentů</p></div>';return;}
+  el.innerHTML=`<div style="position:relative;padding-left:22px">${logs.map((l,i)=>`<div class="audit-entry" style="position:relative">
+    <div style="position:absolute;left:-22px;top:4px"><div class="a-dot" style="background:${dotC[l.action]||'#6b8cde'}"></div>${i<logs.length-1?'<div class="a-line"></div>':''}</div>
+    <div class="a-body"><div class="a-action">${ico[l.action]||'•'} ${l.detail}</div><div class="a-when">${new Date(l.when).toLocaleString('cs-CZ')}</div>
+    ${l.snapshot?`<div class="a-detail">Snapshot uložen — dostupný revert</div><span class="a-revert" onclick="revertDoc('${l.id}')">↩ Vrátit na tuto verzi</span>`:''}
+    </div></div>`).join('')}</div>`;
+}
+function revertDoc(logId){
+  const log=DB.auditLog.find(x=>x.id===logId);if(!log||!log.snapshot){alert('Snapshot není dostupný');return;}
+  if(!confirm('Vrátit dokument na tuto verzi? Aktuální verze bude přepsána.'))return;
+  try{
+    const snap=JSON.parse(log.snapshot);const idx=DB.documents.findIndex(x=>x.id===snap.id);
+    if(idx>=0)DB.documents[idx]=snap;else DB.documents.push(snap);
+    auditLog(DS.propId,'revert',`Dokument "${snap.name}" vrácen na verzi v${snap.ver||1}`,null);
+    saveDB();renderDocs();renderAuditLog(DS.propId);alert('✅ Dokument byl obnoven.');
+  }catch(e){alert('Chyba při revertu.');}
+}
+
+/* ═══ THEME ══════════════════════════════ */
+function setTheme(light){document.documentElement.classList.toggle('light',light);try{localStorage.setItem('rm_theme',light?'light':'dark');}catch(e){}}
+function loadTheme(){try{const s=localStorage.getItem('rm_theme');if(s==='light'){document.documentElement.classList.add('light');const c=document.getElementById('themeChk');if(c)c.checked=true;}}catch(e){}}
+
+/* ═══ INIT ════════════════════════════════ */
+function initApp(){
+  const shell=document.getElementById('shell');
+  shell.style.display='flex';
+  // Update header user info
+  document.getElementById('hdr-av').textContent=(currentUser.name||'U')[0].toUpperCase();
+  document.getElementById('hdr-av').style.background=currentUser.color||'#c9a84c';
+  document.getElementById('hdr-nm').textContent=currentUser.name||'User';
+  loadTheme();
+  openTab('home',false);
+  openTab('dashboard');
+}
+
+// Boot
+loadDB();
+loadTheme();
+if(tryAutoLogin()){
+  document.getElementById('login-screen').classList.add('hidden');
+  initApp();
+}
+</script>
+</body>
+</html>
